@@ -1,4 +1,4 @@
-# SPARSAM: Deep Learning on SPARSely Annotated Medical-data
+# Sparsam: Deep Learning on SPARSely Annotated Medical-data
 
 ***The name of the repository comes from the German word "[sparsam](https://en.wiktionary.org/wiki/sparsam)" [ˈʃpaːɐ̯zaːm], meaning "economical" or "sparing", which reflects the key feature of our approach regarding annotated samples for medical image data.***
 
