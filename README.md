@@ -4,70 +4,17 @@
 
 This repository is a placeholder for the code and data used in the experiments described in the corresponding publication: "Self-supervision for medical image classification". Please note that the code and data will only be made available after the publication has been accepted. We appreciate your understanding in this matter. Once the publication has been accepted, we will update this repository with the necessary code and data to reproduce the experiments. Until then, solely additional information regarding model training and implementation details will be provided here. 
 
-## Implementation Details
+## Data sets
 
-In the following, parameters that have to be instantiated to reproduce the presented results are detailed. The naming follows the DINO implementation.
+The following data sets were used in this study:
 
-### Image cropping and augmentation
-**Global crops:**
-- Number N of crops: 2
-- Crop size relative to input image: 0.5 - 1.0
-- Network image input size (crops are rescaled if necessary): 256 x 256 pixel
+- **Bone Marrow (BM) data set:** A highly unbalanced data set of single bone marrow cell microscopy images that can be found [here](example.com/dataset1) and is provided by [Matek et al. (2021)](https://doi.org/10.1182/blood.2020010568).
+- **Endoscopic (Endo) image data set:** The so-called HyperKvasir data set, consisting of labeled and unlabeled endoscopic images of the upper and lower gastrointestinal tract that can be found [here](example.com/dataset2) and is provided by [Borgli et al. (2020)](https://doi.org/10.1038/s41597-020-00622-y).
+- **Dermoscopic lesion (ISIC) data set:**  A collection of dermoscopic skin lesion data sets that were released as part of the annual Grand Challenges organized by the International Skin Lesion Collaboration (ISIC) that can be found [here](example.com/dataset3) (provided by ).
 
-**Local crops:**
-- N: 5
-- Crop size relative to input image: 0.1 - 0.5
-- Network image input size: 96 x 96
 
-**Augmentation:**
-- Horizontal / vertical flip: p=0.5
-- Rotation: random selection of rotation between 0 and 180 degrees
-- Color jitter (brightness, contrast, saturation and hue): p=0.8
-- Greyscaling: p=0.2
-- Gaussian blurring: random selection of kernel radius between 0.1 - 5
-- Solarization (50% threshold; only global crops): p=0.1
+## Results
 
-### Network architecture and related settings
+![Classification balanced accuracy, 250+](imgs/balanced_acc_250+.png "Classification balanced accuracy, 250+")
 
-**Backbone model:**
-- XCiT small pretrained on ImageNet, patch size: 8
-- Representation dimensionality: 384
-
-**Projection head:**
-- Number of fully connected layers: 4
-- Hidden dimension size: 2,048
-- Bottleneck dimension size: 256
-- Projection size: 65,536
-
-**Optimization process:**
-- Student model optimization by stochastic gradient descent
-- Adam with weight decay (cosine incline from 0.05 to 1)
-- Learning rate: cosine decline with warm up from 0.0005 to 1e-6
-- Batch size: 256
-- Training epochs: 300
-- Teacher model EMA momentum: Cosine incline from 0.998 to 1 
-
-### Classifier settings
-
-The parameter description follows the naming of the scikit-learn implementation. 
-
-**Support vector machine (SVM):**
-- Kernel: Radial basis function
-- class weights: balanced
-- C: 1
-- gamma: 0.1
-
-**Logistic regression (LR):**
-- class weights: balanced
-- C: 2.5
-
-**K-Nearest Neighbors (KNN):**
-- Number of neighbours: 10
-- weights: distance
-
-**Linear layer (LL) and DL-Baseline:**
-- Only global crops 
-- Learning rate: 1e-4
-- Batch size: 128
-- Training epochs: 300
-
+![confusion matrix for bone marrow data set](imgs/cfm_BM.png "Confusion matrix for the BM data set")
