@@ -15,7 +15,7 @@ The following data sets were used in this study:
 
 ## Results
 
-![Classification balanced accuracy, full data](imgs/balanced_acc_250.png "Classification balanced accuracy, full data")
+![Classification balanced accuracy, full data](imgs/balanced_acc.png "Classification balanced accuracy, full data")
 
 ![Classification balanced accuracy, 250+](imgs/balanced_acc_250+.png "Classification balanced accuracy, 250+")
 
