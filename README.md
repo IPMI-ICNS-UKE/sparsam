@@ -21,6 +21,8 @@ For custom use we provide an example python script (dino_example.py) which can b
 import sparsam
 ```
 
+To reproduce the results of our paper, please follow the steps in the respective [readme file](github.com/sparsam/XXX).
+
 Install the necessary dependencies:
 ## Data sets
 
