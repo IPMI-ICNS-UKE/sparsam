@@ -16,11 +16,6 @@ pip install -e sparsam
 pip install -r sparsam/requirements.txt
 ```
 
-To reproduce our results run:
-```bash
-python dino.py 
-```
-
 For custom use we provide an example python script (dino_example.py) which can be easily adapted to use DINO on own data. Note that an individual data set is required and cannot be provided for individual data.
 ```python
 import sparsam
@@ -35,6 +30,12 @@ The following data sets were used in this study:
 - **Endoscopic (Endo) image data set:** The so-called HyperKvasir data set, consisting of labeled and unlabeled endoscopic images of the upper and lower gastrointestinal tract that can be found [here](https://datasets.simula.no/hyper-kvasir/) and is provided by [Borgli et al. (2020)](https://doi.org/10.1038/s41597-020-00622-y).
 - **Dermoscopic lesion (ISIC) data set:**  A collection of dermoscopic skin lesion data sets that were released as part of the annual Grand Challenges organized by the International Skin Lesion Collaboration (ISIC, used data is from 2019 and 2020) that can be found [here](https://challenge.isic-archive.com/data/#2019)(2019) and [here](https://challenge.isic-archive.com/data/#2020)(2020).
 
+For each data set, the trained XCiT small model weights are provided and can be used in the following way:
+```
+python
+import timm
+model = timm.models.xcit_small
+```
 
 ## Results
 In the following, main results of the performed experiments are presented. It can be seen that our proposed method is able to consitently outperform supervised learning approaches (DL baseline) and further only needs a fraction of labeled training data to achieve state-of-the-art performance. 
