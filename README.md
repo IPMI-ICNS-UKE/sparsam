@@ -15,6 +15,8 @@ The following data sets were used in this study:
 
 ## Results
 
+![Classification balanced accuracy, full data](imgs/balanced_acc_250.png "Classification balanced accuracy, full data")
+
 ![Classification balanced accuracy, 250+](imgs/balanced_acc_250+.png "Classification balanced accuracy, 250+")
 
 ![confusion matrix for bone marrow data set](imgs/cfm_BM.png "Confusion matrix for the BM data set")
