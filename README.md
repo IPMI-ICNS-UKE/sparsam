@@ -31,8 +31,7 @@ The following data sets were used in this study:
 - **Dermoscopic lesion (ISIC) data set:**  A collection of dermoscopic skin lesion data sets that were released as part of the annual Grand Challenges organized by the International Skin Lesion Collaboration (ISIC, used data is from 2019 and 2020) that can be found [here](https://challenge.isic-archive.com/data/#2019)(2019) and [here](https://challenge.isic-archive.com/data/#2020)(2020).
 
 For each data set, the trained XCiT small model weights are provided and can be used in the following way:
-```
-python
+```python
 import timm
 model = timm.models.xcit_small
 ```
