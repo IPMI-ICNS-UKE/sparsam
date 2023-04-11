@@ -7,7 +7,7 @@ This repository contains the code used in the experiments described in the publi
 ## How to use
 Clone the repository to your local machine:
 ```bash
-https://github.com/IPMI-ICNS-UKE/sparsam.git
+git clone https://github.com/IPMI-ICNS-UKE/sparsam.git
 ```
 
 Install the package and necessary dependencies:
