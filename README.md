@@ -14,7 +14,7 @@ The following data sets were used in this study:
 
 
 ## Results
-In the following, main results of the performed experiments are presented. 
+In the following, main results of the performed experiments are presented. It can be seen that our proposed method is able to consitently outperform supervised learning approaches (DL baseline) and further only needs a fraction of labeled training data to achieve state-of-the-art performance. 
 
 ![Classification balanced accuracy, full data](imgs/balanced_acc.png "Classification balanced accuracy, full data")
 *Figure 1: Classification balanced accuracy for the different classifiers for different numbers of labeled samples per class for the three image data sets (BM, Endo, ISIC). The accuracy is shown for the maximum number of labeled training samples per class; if the training data set for a particular class contained only a smaller number of images, all available training images were used. This means that the training for larger sample sizes is partially biased toward better performance for larger classes due to the unavailability of a sufficient number of labeled training samples for smaller classes. The literature benchmark performance refers to accuracy data reported in the context of the publication of the image data sets (BM, Endo) and a directly associated publication for ISIC; average accuracy of the 14 models evaluated in the paper). The DL benchmark line indicates the performance of our DL baseline model trained on all available labeled samples of the training data sets.*
