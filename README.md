@@ -4,6 +4,29 @@
 
 This repository contains the code used in the experiments described in the publication titled "Self-Supervision for Medical Image Classification". The corresponding [results](#results) demonstrate that the utilized self-supervised learning method (DINO), in combination with an SVM, consistently outperforms supervised learning approaches (DL baseline). Furthermore, this method requires only a fraction of labeled training data to achieve state-of-the-art performance for medical image data classification. We encourage other researchers and practitioners to employ our approach and report the results achieved when utilizing it in their own experiments. By doing so, we can continue to build on this important work and advance the field of medical image classification **together**.
 
+## How to use
+Clone the repository to your local machine:
+```bash
+git clone https://github.com/username/repository.git
+```
+
+Install the package and necessary dependencies:
+```bash
+pip install -e sparsam
+pip install -r sparsam/requirements.txt
+```
+
+To reproduce our results run:
+```bash
+python dino.py 
+```
+
+For custom use we provide an example python script (dino_example.py) which can be easily adapted to use DINO on own data. Note that an individual data set is required and cannot be provided for individual data.
+```python
+import sparsam
+```
+
+Install the necessary dependencies:
 ## Data sets
 
 The following data sets were used in this study:
