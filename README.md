@@ -8,9 +8,9 @@ This repository contains the code used in the experiments described in the publi
 
 The following data sets were used in this study:
 
-- **Bone Marrow (BM) data set:** A highly unbalanced data set of single bone marrow cell microscopy images that can be found [here](example.com/dataset1) and is provided by [Matek et al. (2021)](https://doi.org/10.1182/blood.2020010568).
-- **Endoscopic (Endo) image data set:** The so-called HyperKvasir data set, consisting of labeled and unlabeled endoscopic images of the upper and lower gastrointestinal tract that can be found [here](example.com/dataset2) and is provided by [Borgli et al. (2020)](https://doi.org/10.1038/s41597-020-00622-y).
-- **Dermoscopic lesion (ISIC) data set:**  A collection of dermoscopic skin lesion data sets that were released as part of the annual Grand Challenges organized by the International Skin Lesion Collaboration (ISIC) that can be found [here](example.com/dataset3) (provided by ).
+- **Bone Marrow (BM) data set:** A highly unbalanced data set of single bone marrow cell microscopy images that can be found [here](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=101941770) and is provided by [Matek et al. (2021)](https://doi.org/10.1182/blood.2020010568).
+- **Endoscopic (Endo) image data set:** The so-called HyperKvasir data set, consisting of labeled and unlabeled endoscopic images of the upper and lower gastrointestinal tract that can be found [here](https://datasets.simula.no/hyper-kvasir/) and is provided by [Borgli et al. (2020)](https://doi.org/10.1038/s41597-020-00622-y).
+- **Dermoscopic lesion (ISIC) data set:**  A collection of dermoscopic skin lesion data sets that were released as part of the annual Grand Challenges organized by the International Skin Lesion Collaboration (ISIC, used data is from 2019 and 2020) that can be found [here](https://challenge.isic-archive.com/data/#2019)(2019) and [here](https://challenge.isic-archive.com/data/#2020)(2020).
 
 
 ## Results
