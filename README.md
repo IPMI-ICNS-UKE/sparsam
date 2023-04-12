@@ -2,7 +2,11 @@
 
 *The name of the repository comes from the German word "[sparsam](https://en.wiktionary.org/wiki/sparsam)" [ˈʃpaːɐ̯zaːm], meaning "economical" or "sparing", which reflects the key feature of our approach regarding annotated samples for medical image data.*
 
-This repository contains the code used in the experiments described in the publication titled "[Self-Supervision for Medical Image Classification](https://arxiv.org/abs/2304.05163)". The corresponding [results](#results) demonstrate that the utilized self-supervised learning method (DINO), in combination with an SVM, consistently outperforms supervised learning approaches (DL baseline). Furthermore, this method requires only a fraction of labeled training data to achieve state-of-the-art performance for medical image data classification. We encourage other researchers and practitioners to employ our approach and report the results achieved when utilizing it in their own experiments. By doing so, we can continue to build on this important work and advance the field of medical image classification **together**.
+This repository contains the code and data splits used in the experiments described in the publication titled "[Self-Supervision for Medical Image Classification](https://arxiv.org/abs/2304.05163)". The corresponding [results](#results) demonstrate that the utilized self-supervised learning method ([DINO](https://arxiv.org/abs/2104.14294)), in combination with an SVM, consistently outperforms supervised learning approaches (DL baseline). Furthermore, this method requires only a fraction of labeled training data to achieve state-of-the-art performance for medical image data classification. We encourage other researchers and practitioners to employ our approach and report the results achieved when utilizing it in their own experiments. By doing so, we can continue to build on this important work and advance the field of medical image classification **together**.
+
+This is a [reimplementation of the DINO algorithm](https://github.com/facebookresearch/dino) proposed by Caron et al. of [Meta Research](https://research.facebook.com/).
+
+In the future we aim to provide benchmarks and data splits for additional medical datasets and methods.
 
 ## How to use
 Clone the repository to your local machine:
