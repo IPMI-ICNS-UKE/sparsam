@@ -35,7 +35,7 @@ The following data sets were used in this study:
 For each data set, the trained XCiT small model weights are provided and can be used in the following way:
 ```python
 import timm
-model = timm.models.xcit_small
+model = timm.models.xcit_small_p8_224(in_chans=3, num_classes=0, pretrained=True)
 ```
 
 ## Results
