@@ -8,6 +8,14 @@ This is a [reimplementation of the DINO algorithm](https://github.com/facebookre
 
 In the future we aim to provide benchmarks and data splits for additional medical datasets and methods.
 
+## Features
+- Ready to use reimplemntation of the dino algorithm
+  - easy evaluation of new data-sets
+  - reproducability our results
+- Easily adjustable classes for custom student-teacher trainings setups
+- Train-test splits of all data-sets for future work and reproducibility
+- Standardised supervised pipeline for baselining 
+
 ## How to use
 Clone the repository to your local machine:
 ```bash
