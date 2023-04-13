@@ -27,7 +27,10 @@ Install the package and necessary dependencies:
 pip install -e sparsam
 pip install -r sparsam/requirements.txt
 ```
-
+To use pretrained models [git LFS](https://git-lfs.com/) has to be installed. Models may be cloned then with:
+```bash
+git lfs clone https://github.com/IPMI-ICNS-UKE/sparsam.git
+```
 For custom use we provide an example python script (dino_example.py) which can be easily adapted to use DINO on own data. Note that an individual data set is required and cannot be provided for individual data.
 ```python
 import sparsam
