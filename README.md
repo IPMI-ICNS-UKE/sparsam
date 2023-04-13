@@ -4,9 +4,9 @@
 
 This repository contains the code and data splits used in the experiments described in the publication titled "[Self-Supervision for Medical Image Classification](https://arxiv.org/abs/2304.05163)". The corresponding [results](#results) demonstrate that the utilized self-supervised learning method ([DINO](https://arxiv.org/abs/2104.14294)), in combination with an SVM, consistently outperforms supervised learning approaches (DL baseline). Furthermore, this method requires only a fraction of labeled training data to achieve state-of-the-art performance for medical image data classification. We encourage other researchers and practitioners to employ our approach and report the results achieved when utilizing it in their own experiments. By doing so, we can continue to build on this important work and advance the field of medical image classification **together**.
 
-This is a [reimplementation of the DINO algorithm](https://github.com/facebookresearch/dino) proposed by Caron et al. of [Meta Research](https://research.facebook.com/).
+Our [reimplementation of DINO](https://github.com/facebookresearch/dino) is based on the work of Caron et al. from [Meta Research](https://research.facebook.com/).
 
-In the future we aim to provide benchmarks and data splits for additional medical datasets and methods.
+In the future, we plan to extend our benchmarks and provide data splits for additional medical datasets and methods. This will allow researchers to evaluate and compare the effectiveness of various methods more comprehensively.
 
 ## Features
 - Ready-to-use reimplementation of the DINO algorithm
