@@ -9,12 +9,14 @@ This is a [reimplementation of the DINO algorithm](https://github.com/facebookre
 In the future we aim to provide benchmarks and data splits for additional medical datasets and methods.
 
 ## Features
-- Ready to use reimplemntation of the DINO algorithm
-  - easy evaluation of new data-sets
-  - reproducability our results
-- Easily adjustable classes for custom student-teacher trainings setups
-- Train-test splits of all data-sets for future work and reproducibility
-- Standardised supervised pipeline for baselining 
+- Ready-to-use reimplementation of the DINO algorithm
+  - Easy evaluation of new datasets
+  - Reproducibility of our results
+- Customizable classes for training student-teacher setups with various architectures
+- Train-test-validation splits for all datasets for future work and reproducibility
+- Standardized supervised pipeline for baselining and hyperparameter tuning
+- Support for distributed training to improve training time for large datasets
+- Integration with popular deep learning frameworks for seamless use in existing workflows.
 
 ## How to use
 Clone the repository to your local machine:
