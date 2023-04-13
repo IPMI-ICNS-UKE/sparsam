@@ -13,10 +13,8 @@ In the future, we plan to extend our benchmarks and provide data splits for addi
   - Easy evaluation of new datasets
   - Reproducibility of our results
 - Customizable classes for training student-teacher setups with various architectures
-- Train-test-validation splits for all datasets for future work and reproducibility
+- Train-test splits for all datasets for future work and reproducibility
 - Standardized supervised pipeline for baselining and hyperparameter tuning
-- Support for distributed training to improve training time for large datasets
-- Integration with popular deep learning frameworks for seamless use in existing workflows.
 
 ## How to use
 Clone the repository to your local machine:
