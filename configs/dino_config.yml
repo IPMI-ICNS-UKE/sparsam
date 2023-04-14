@@ -1,0 +1,41 @@
+model_parameter:
+  in_chans: 3
+  num_classes: 0
+  pretrained: True
+
+loss_parameter: {}
+early_stopping_parameter:
+  min_delta: 0.005
+  patience: 5
+  warm_up: 40
+
+lr_scheduler_parameter:
+  decay_rate: 0.5
+  patience_t: 500
+  verbose: False
+  cooldown_t: 500
+  warmup_t: 250
+  mode: 'min'
+
+dataset:
+  image_resolution: 256
+
+augmentor_parameter:
+  n_global_crops: 1
+  n_local_crops: 0
+  global_crops_scale: !!python/tuple [ 0.5, 1. ]
+  local_crops_scale: !!python/tuple [ 0.1, 0.5 ]
+
+data_loader_parameter:
+  persistent_workers: True
+  shuffle: True  # only train
+  drop_last: True  # only train
+
+optimizer_parameter:
+  lr: 0.0001
+  weight_decay: 0.05
+
+gym:
+  n_trainings_epochs: 500
+  eval_frequency: 100
+

@@ -1,0 +1,11 @@
+wandb_parameter:
+  project: 'WEASL'
+  entity: 'ipmi'
+  mode: 'online'
+
+data_loader_parameter:
+  batch_size: 64
+  num_workers: 8
+
+device: 0
+

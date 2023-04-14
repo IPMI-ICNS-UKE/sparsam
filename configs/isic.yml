@@ -1,0 +1,7 @@
+wandb_parameter:
+  group: ISIC
+
+image_root_path: /home/icnsadmin/data/skin/
+label_root_path: /home/icnsadmin/code/WEASL/splits/ISIC
+
+class_names: ['MEL', 'NV', 'BCC', 'AK', 'BKL', 'DF', 'VASC', 'SCC']

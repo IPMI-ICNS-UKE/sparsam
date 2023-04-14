@@ -1,0 +1,6 @@
+timm
+pytorch
+tqdm
+scikit-learn
+numpy
+click
