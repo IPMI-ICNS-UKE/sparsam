@@ -101,13 +101,13 @@ def run(
         load_machine_param_from_yaml: bool | Path = False,
 ):
     """
+    :param image_root_path: Path to the root image folder
     :param data_set: Which data set to train. Must be one of the following: ["isic", "bone_marrow", "endo"]
     :param trainings_mode: Which results to reproduce. The mode is provided as composed string. If "ssl" is part of the
                             string. The model is going to be pretrained with DINO otherwise precomputed weights are
                             used. Valid useful options are: "ssl,classifier", "ssl,linear", "classifier",
                             "linear", and "supervised". In principle all combinations are valid and will be
                             executed.
-    :param image_root_path: Path to the root image folder
     :param min_class_size: only consider classes, where the training_samples exceed the provided min class_size. Default
                            is None.
     :param eval_class_sizes: Which class sizes to evaluate. Multiple are possible. e.g. "-e 10 -e 250. Evaluates the
