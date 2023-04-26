@@ -24,7 +24,7 @@ from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader, Dataset
 import git
 
-from Dataset import ImageSet, MultiCropDatasetWrapper
+from utils.Dataset import ImageSet
 from main.parameter import MODEL, CLASSIFIERS
 
 import wandb
@@ -33,7 +33,7 @@ from sparsam.data_augmentation import DinoAugmentationCropper
 from sparsam.helper import uniform_train_test_splitting, recursive_dict, _sort_class_names, get_large_classes, \
     filter_classes, dict_merge
 from sparsam.train import create_dino_gym, SuperGym
-from sparsam.utils import JsonLogger, model_inference, MultiCropModelWrapper, EarlyStopper, ModelMode, GradClipWrapper
+from sparsam.utils import JsonLogger, model_inference, MultiCropModelWrapper, MultiCropDatasetWrapper, EarlyStopper, ModelMode, GradClipWrapper
 
 
 @click.command()

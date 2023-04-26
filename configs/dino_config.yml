@@ -21,8 +21,8 @@ dataset:
   image_resolution: 256
 
 augmentor_parameter:
-  n_global_crops: 1
-  n_local_crops: 0
+  n_global_crops: 2
+  n_local_crops: 5
   global_crops_scale: !!python/tuple [ 0.5, 1. ]
   local_crops_scale: !!python/tuple [ 0.1, 0.5 ]
 

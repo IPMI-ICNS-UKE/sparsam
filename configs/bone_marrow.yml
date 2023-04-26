@@ -1,0 +1,8 @@
+wandb_parameter:
+  group: BM
+
+image_root_path: /home/icnsadmin/data/cells/
+label_root_path: /home/icnsadmin/code/WEASL/splits
+
+class_names: ["ART", "BAS", "BLA", "EBO", "EOS", "FGC", "HAC", "KSC", "LYI", "LYT", "MMZ", "MON", "MYB", "NGB",
+                       "NGS", "NIF", "OTH", "PEB", "PLM", "PMO", "ABE"]

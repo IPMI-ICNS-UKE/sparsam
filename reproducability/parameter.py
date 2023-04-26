@@ -41,41 +41,57 @@ class DataCropperDINO(BaseMultiCropper):
                 transforms.RandomHorizontalFlip(p=0.5),
                 transforms.RandomVerticalFlip(p=0.5),
                 transforms.RandomApply(
-                    [transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1)], p=0.25
+                    [transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1)], p=0.8
                 ),
                 transforms.RandomGrayscale(p=0.2),
             ]
         )
 
         # first global crop
-        self.global_transfo = transforms.Compose(
+        self.global_transfo1 = transforms.Compose(
             [
-                transforms.RandomPerspective(distortion_scale=0.5, p=0.25),
+                transforms.RandomPerspective(distortion_scale=0.5, p=0.75),
                 transforms.RandomRotation(180),
                 transforms.RandomResizedCrop(res, scale=global_crops_scale),
                 flip_and_color_jitter,
-                GaussianBlur(p=0.2, radius_min=0.1, radius_max=5.0),
+                GaussianBlur(p=1.0, radius_min=0.1, radius_max=5.0),
+                ToTensor(),
+            ]
+        )
+
+        # first global crop
+        self.global_transfo2 = transforms.Compose(
+            [
+                transforms.RandomPerspective(distortion_scale=0.5),
+                transforms.RandomRotation(180),
+                transforms.RandomResizedCrop(res, scale=global_crops_scale),
+                flip_and_color_jitter,
+                GaussianBlur(p=0.1, radius_min=0.1, radius_max=5.0),
                 Solarization(p=0.2),
                 ToTensor(),
             ]
         )
+
         # transformation for the local small crops
         self.local_transfo = transforms.Compose(
             [
-                transforms.RandomPerspective(distortion_scale=0.5, p=0.2),
+                transforms.RandomPerspective(distortion_scale=0.5, p=0.75),
                 transforms.RandomRotation(180),
                 transforms.RandomResizedCrop(res // 3, scale=local_crops_scale),
                 flip_and_color_jitter,
-                GaussianBlur(p=0.2, radius_min=0.1, radius_max=5.0),
+                GaussianBlur(p=0.5, radius_min=0.1, radius_max=5.0),
                 ToTensor(),
             ]
         )
 
     def __call__(self, image):
-        crops = [min_max_normalize_tensor(self.global_transfo(image), 0, 1) for _ in range(self.n_global_crops)]
+        crops = []
+        crops.extend(min_max_normalize_tensor(self.global_transfo1(image), 0, 1))
+        crops.extend(min_max_normalize_tensor(self.global_transfo2(image), 0, 1))
         for _ in range(self.n_local_crops):
             crop = min_max_normalize_tensor(self.local_transfo(image), 0, 1)
             while torch.any(crop.isnan()):
                 crop = torch.nan_to_num(crop, nan=0)
             crops.append(crop)
         return crops
+

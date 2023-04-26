@@ -45,11 +45,11 @@ def model_inference(
     return np.array(features), np.array(labels)
 
 
-class EmaStudentTeacherUpdate:
+class EmaTeacherUpdate:
     def __init__(self, momentum: float | Callable = 0.9):
         self.momentum = momentum
 
-    def __call__(self, student: nn.Module, teacher: nn.Module, iteration: int = None):
+    def __call__(self, teacher: nn.Module, student: nn.Module, iteration: int = None):
         with torch.no_grad():
             if callable(self.momentum):
                 momentum = self.momentum(iteration)
@@ -77,18 +77,18 @@ class CosineScheduler:
         schedule = final_value + 0.5 * (base_value - final_value) * (1 + np.cos(np.pi * cos_iters / len(cos_iters)))
 
         self.schedule = np.concatenate((warmup_schedule, schedule))
-        self.steps = 0
+        self.step = 0
 
     def __call__(self, step=None) -> float:
-        if step:
-            self.steps = step
+        if step is not None:
+            self.step = step
 
-        if self.steps < len(self.schedule):
-            value = self.schedule[self.steps]
+        if self.step < len(self.schedule):
+            value = self.schedule[self.step]
         else:
             value = self.schedule[-1]
 
-        self.steps += 1
+        self.step += 1
 
         return value
 
@@ -113,18 +113,17 @@ class OptimizerScheduler(SimpleScheduler):
 
 
 class LRScheduler(OptimizerScheduler):
-    def step(self, *args, **kwargs) -> float:
-        lr = self.scheduler()
-        self.current_lr = lr
+    def step(self, step: int = None, *args, **kwargs) -> float:
+        lr = self.scheduler(step)
         for i, param_group in enumerate(self.optimizer.param_groups):
             param_group["lr"] = lr
         return lr
 
 
 class DinoWdScheduler(OptimizerScheduler):
-    def step(self, *args, **kwargs) -> float:
+    def step(self, step: int = None, *args, **kwargs) -> float:
         for i, param_group in enumerate(self.optimizer.param_groups):
-            wd = self.scheduler()
+            wd = self.scheduler(step)
             if i == 0:  # only the first group is regularized
                 param_group["weight_decay"] = wd
                 break
@@ -141,20 +140,21 @@ class GradClipWrapper:
 class DinoGradClipper:
     def __init__(self, freeze_last_layer_iterations: int = None, clip_factor: float = 0.32):
         self.freeze_last_layer_iterations = freeze_last_layer_iterations
-        self.steps = 0
+        self.step = 0
         self.grad_clipper = partial(timm.utils.adaptive_clip_grad, clip_factor=clip_factor, eps=1e-3, norm_type=2.0)
 
     def __call__(self, model: nn.Module, step: int = None):
         if step:
-            self.steps = step
+            self.step = step
 
         self.grad_clipper(parameters=model.parameters())
 
         if self.freeze_last_layer_iterations:
             self._cancel_gradients_last_layer(model)
+        self.step += 1
 
     def _cancel_gradients_last_layer(self, model: nn.Module):
-        if self.steps < self.freeze_last_layer_iterations:
+        if self.step < self.freeze_last_layer_iterations:
             for n, p in model.named_parameters():
                 if "last_layer" in n:
                     p.grad = None
@@ -162,7 +162,7 @@ class DinoGradClipper:
 
 class BaseLogger(ABC):
     @abstractmethod
-    def log(self, logs: dict, *args, **kwargs):
+    def log(self, step: int | str, *args, **kwargs):
         """logs a dict with key value pairs"""
         pass
 
@@ -315,6 +315,30 @@ class MultiCropModelWrapper(nn.Module):
 
     def forward_features(self, x: Tensor) -> torch.Tensor:
         return self.backbone(x)
+
+
+class MultiCropDatasetWrapper(Dataset):
+    def __init__(self, dataset: Dataset, data_cropper: callable = None):
+        super().__init__()
+        self.dataset = dataset
+        self.transform = data_cropper or DinoAugmentationCropper(2, 5)
+
+    def __getitem__(self, idx: int) -> Tensor | Tuple[Tensor, Tuple[Any]]:
+        data = self.dataset.__getitem__(idx)
+        if not isinstance(data, tuple):
+            image = data
+            data = None
+        else:
+            # assumes image to be the first return value
+            image = data[0]
+            data = data[1:]
+        images = self.transform(image)
+        n_views = len(images)
+        data = [[d] * n_views for d in data]
+        return images, *data
+
+    def __len__(self):
+        return self.dataset.__len__()
 
 
 def min_max_normalize_tensor(img: torch.Tensor, min_value: float, max_value: float) -> torch.Tensor:

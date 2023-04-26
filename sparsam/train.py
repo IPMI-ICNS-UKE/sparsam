@@ -25,16 +25,14 @@ from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
-import wandb
-
+from Dataset import MultiCropDatasetWrapper
 from sparsam.data_augmentation import DinoAugmentationCropper
 from sparsam.helper import get_params_groups
 from sparsam.loss import DINOLoss
 from sparsam.utils import (
     ProjectionHead,
     MultiCropModelWrapper,
-    MultiCropDatasetWrapper,
-    EmaStudentTeacherUpdate,
+    EmaTeacherUpdate,
     DummyLogger,
     BaseLogger,
     DinoGradClipper,
@@ -44,6 +42,7 @@ from sparsam.utils import (
     model_inference,
     optimizer_to_device,
     BaseScheduler,
+    ModelMode,
 )
 
 
@@ -120,9 +119,9 @@ class BaseGym(ABC):
         metric_dict = dict()
         for metric, requires_probability in zip(self.metrics, self.metrics_require_probabilities):
             if requires_probability:
-                metric_dict[metric.func.__name__] = metric(predictions_prob, val_labels)
+                metric_dict[metric.func.__name__] = metric(val_labels, predictions_prob)
             else:
-                metric_dict[metric.func.__name__] = metric(predictions, val_labels)
+                metric_dict[metric.func.__name__] = metric(val_labels, predictions)
         return metric_dict
 
     def _model_backprop(self, loss: torch.TensorType):
@@ -148,10 +147,11 @@ class BaseGym(ABC):
     def _init_tqdm_bar(self) -> tqdm:
         starting_epoch = self.starting_step // len(self.train_loader)
         starting_step = starting_epoch * len(self.train_loader)
+        last_step = len(self.train_loader) * self.n_trainings_epochs
         epoch_bar = tqdm(
-            range(starting_epoch, self.n_trainings_epochs),
+            range(starting_step, last_step),
             initial=starting_step,
-            total=len(self.train_loader) * self.n_trainings_epochs,
+            total=last_step,
         )
         return epoch_bar
 
@@ -229,11 +229,13 @@ class StudentTeacherGym(BaseGym):
         self.student_model.to(self.device)
         self.teacher_model.to(self.device)
         optimizer_to_device(self.optimizer, self.device)
+        if isinstance(self.loss, nn.Module):
+            self.loss.to(self.device)
 
         metrics_dict = None
         epoch_bar = self._init_tqdm_bar()
 
-        while epoch_bar.n < len(epoch_bar):
+        while epoch_bar.n < epoch_bar.total:
             for iteration, batch in enumerate(self.train_loader):
                 step = epoch_bar.n
                 self.optimizer.zero_grad(True)
@@ -243,11 +245,12 @@ class StudentTeacherGym(BaseGym):
 
                 if step % self.eval_f == 0 and self.val_loader and self.labeled_train_loader:
                     metrics_dict = self.eval_student_teacher()
+                    self.logger.log(metrics_dict, step=step)
                 # TODO save best model
                 if self.save_path and step % self.save_f == 0:
                     self._save_training_state(step)
 
-                self.logger.log(step=step, loss=loss_val, metrics=metrics_dict)
+                self.logger.log(dict(loss=loss_val), step=step)
                 epoch_bar.update(1)
                 epoch_bar.set_description(desc=f"loss={loss_val:.4f}")
         self.student_model.to('cpu')
@@ -259,6 +262,10 @@ class StudentTeacherGym(BaseGym):
         with autocast():
             loss = self.loss(student_out, teacher_out)
         self._model_backprop(loss)
+        self.teacher_update(
+            self.teacher_model,
+            self.student_model,
+        )
         return loss.item()
 
     @autocast()
@@ -266,7 +273,7 @@ class StudentTeacherGym(BaseGym):
         self.teacher_model.train()
         self.student_model.train()
         with torch.no_grad():
-            teacher_out = self.teacher_model(images)
+            teacher_out = self.teacher_model(images[:2])
         student_out = self.student_model(images)
         return teacher_out, student_out
 
@@ -296,7 +303,9 @@ class StudentTeacherGym(BaseGym):
     @torch.no_grad()
     @autocast()
     def _extract_features(self, data_loader: Iterable, model: nn.Module):
-        return model_inference(data_loader, model, self.device)
+        return model_inference(
+            data_loader=data_loader, model=model, mode=ModelMode.EXTRACT_FEATURES, device=self.device
+        )
 
     def _predict_val_samples(self, model: nn.Module) -> Tuple[np.array, np.array]:
         train_features, train_labels = self._extract_features(self.labeled_train_loader, model)
@@ -312,6 +321,8 @@ class StudentTeacherGym(BaseGym):
         self._save_state_dict(self.student_model, save_path / f'student_{step}.pt')
         self._save_state_dict(self.teacher_model, save_path / f'teacher_{step}.pt')
         self._save_state_dict(self.optimizer, save_path / f'optimizer_{step}.pt')
+        self._save_state_dict(self.loss, save_path / f'loss_{step}.pt')
+        self._save_state_dict(self.scaler, save_path / f'scaler_{step}.pt')
 
 
 def create_dino_gym(
@@ -354,7 +365,7 @@ def create_dino_gym(
     center_momentum=0.9,
     grad_clip_factor: float = 0.32,
     freeze_last_layer_iterations: int = None,  # default: 1 epoch
-    teacher_momentum: float = 0.998,
+    teacher_momentum: float = 0.9995,
     final_lr: float = 0,
     lr_scheduler_warm_up_iterations: int = None,  # default: 2 epochs
     final_weight_decay: float = 0.4,
@@ -393,6 +404,8 @@ def create_dino_gym(
         student_state_dict = torch.load(dict_dic / f'student_{step}.pt')
         teacher_state_dict = torch.load(dict_dic / f'teacher_{step}.pt')
         optimizer_state_dict = torch.load(dict_dic / f'optimizer_{step}.pt')
+        loss_state_dict = torch.load(dict_dic / f'loss_{step}.pt')
+        scaler_state_dict = torch.load(dict_dic / f'scaler_{step}.pt')
         step = int(step) + 1
 
     elif isinstance(resume_training_from_checkpoint, int):
@@ -419,18 +432,16 @@ def create_dino_gym(
         n_layers=projection_head_n_layers,
     )
     teacher_model = MultiCropModelWrapper(backbone=deepcopy(backbone), projection_head=projection_head)
-    teacher_update_function = EmaStudentTeacherUpdate(teacher_momentum)
+    teacher_update_function = EmaTeacherUpdate(teacher_momentum)
     optimizer_parameters = optimizer_parameters or dict(lr=0.0005, weight_decay=0.04)
     optimizer = optimizer(get_params_groups(student_model), **optimizer_parameters)
 
-    if resume_training_from_checkpoint:
+    if isinstance(resume_training_from_checkpoint, os.PathLike):
         student_model.load_state_dict(student_state_dict)
         teacher_model.load_state_dict(teacher_state_dict)
         optimizer.load_state_dict(optimizer_state_dict)
 
     warmup_teacher_temp_iterations = warmup_teacher_temp_iterations or len(unlabeled_train_loader) * 10
-    if resume_training_from_checkpoint:
-        warmup_teacher_temp_iterations = max(0, warmup_teacher_temp_iterations - step)
 
     loss_function = DINOLoss(
         n_crops=n_global_crops + n_local_crops,
@@ -439,7 +450,12 @@ def create_dino_gym(
         teacher_temp=teacher_temp,
         warmup_teacher_temp_iterations=warmup_teacher_temp_iterations,
         center_momentum=center_momentum,
+        out_dim=projection_head_out_dim,
     )
+    if resume_training_from_checkpoint:
+        loss_function.step = step
+    if isinstance(resume_training_from_checkpoint, os.PathLike):
+        loss_function.load_state_dict(loss_state_dict)
 
     base_lr = optimizer.param_groups[0]['lr']
     base_wd = optimizer.param_groups[0]['weight_decay']
@@ -464,6 +480,8 @@ def create_dino_gym(
     grad_clipper = grad_clipper or DinoGradClipper(
         freeze_last_layer_iterations=freeze_last_layer_iterations, clip_factor=grad_clip_factor
     )
+    if resume_training_from_checkpoint:
+        grad_clipper.step = step
 
     dino_gym = StudentTeacherGym(
         train_loader=unlabeled_train_loader,
@@ -489,6 +507,9 @@ def create_dino_gym(
         model_saving_frequency=model_saving_frequency,
         logger=logger,
     )
+    if isinstance(resume_training_from_checkpoint, os.PathLike):
+        dino_gym.scaler.load_state_dict(scaler_state_dict)
+
     return dino_gym
 
 
@@ -553,6 +574,8 @@ class SuperGym(BaseGym):
     def train(self) -> nn.Module:
         self.model.to(self.device)
         optimizer_to_device(self.optimizer, self.device)
+        if isinstance(self.loss, nn.Module):
+            self.loss.to(self.device)
 
         best_metric = None
         early_stopping = False
@@ -588,7 +611,7 @@ class SuperGym(BaseGym):
                 if self.save_path and step % self.save_f == 0 or any(metric_improvement):
                     self._save_training_state(step)
 
-                self.logger.log(step=step, loss=loss_val, metrics=metrics_dict)
+                self.logger.log(dict(loss=loss_val, metrics=metrics_dict), step=step)
                 epoch_bar.set_description(desc=f"loss={loss_val:.4f}")
                 epoch_bar.update(1)
 
