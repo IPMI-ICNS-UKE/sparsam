@@ -162,7 +162,7 @@ class DinoGradClipper:
 
 class BaseLogger(ABC):
     @abstractmethod
-    def log(self, step: int | str, *args, **kwargs):
+    def log(self, logs: dict, step: int | str):
         """logs a dict with key value pairs"""
         pass
 
@@ -178,8 +178,12 @@ class JsonLogger(BaseLogger):
         self.save_path = Path(save_path) / f'log_{datetime.now().strftime("%Y-%m-%d-%H-%M-%s")}.json'
         self.logger = recursive_dict()
 
-    def log(self, step: int | str, **kwargs):
-        self.logger[step] = kwargs
+    def log(self, logs: dict, step: int | str):
+        if not step in list(self.logger.keys()):
+            self.logger[step] = logs
+        else:
+            self.logger[step].update(logs)
+
         with open(self.save_path, 'w') as h:
             json.dump(self.logger, h)
 

@@ -232,9 +232,7 @@ class StudentTeacherGym(BaseGym):
         if isinstance(self.loss, nn.Module):
             self.loss.to(self.device)
 
-        metrics_dict = None
         epoch_bar = self._init_tqdm_bar()
-
         while epoch_bar.n < epoch_bar.total:
             for iteration, batch in enumerate(self.train_loader):
                 step = epoch_bar.n
