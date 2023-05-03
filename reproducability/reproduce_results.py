@@ -233,12 +233,12 @@ def run(
             key.replace('backbone.', ''): weight for key, weight in pretrained_weights.items() if 'backbone.' in key
         }
         model.load_state_dict(pretrained_weights, strict=True)
-        test_features, test_labels = model_inference(test_loader, model, mode=ModelMode.EXTRACT_FEATURES, device=device)
-        test_features = np.array(test_features)
-        test_labels = np.array(test_labels)
 
     results_dict = recursive_dict()
     if 'classifier' in trainings_mode:
+        test_features, test_labels = model_inference(test_loader, model, mode=ModelMode.EXTRACT_FEATURES, device=device)
+        test_features = np.array(test_features)
+        test_labels = np.array(test_labels)
         train_set = ImageSet(
             img_paths=labeled_train_paths,
             labels=train_labels,

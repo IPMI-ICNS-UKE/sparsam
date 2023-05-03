@@ -38,7 +38,10 @@ import sparsam
 
 To reproduce the results of our paper, please follow the steps in the respective [readme file](https://github.com/IPMI-ICNS-UKE/sparsam/tree/master/reproducability).
 
+For a basic example please see [example.py](https://github.com/IPMI-ICNS-UKE/sparsam/blob/master/dino_example.py)
+
 Install the necessary dependencies:
+
 ## Data sets
 
 The following data sets were used in this study:
