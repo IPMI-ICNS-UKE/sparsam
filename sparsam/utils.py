@@ -5,7 +5,7 @@ from enum import Enum
 from functools import partial
 from os import PathLike
 from pathlib import Path
-from typing import Callable, List, Iterable, Tuple
+from typing import Callable, List, Iterable, Tuple, Any
 import json
 
 import numpy as np
@@ -14,7 +14,9 @@ import torch
 from torch import nn, Tensor
 from torch.cuda.amp import autocast
 from torch.optim import Optimizer
+from torch.utils.data.dataset import Dataset
 
+from sparsam.data_augmentation import DinoAugmentationCropper
 from sparsam.helper import trunc_normal_, recursive_dict
 
 
@@ -254,7 +256,8 @@ class ProjectionHead(nn.Module):
         if norm_last_layer:
             self.last_layer.weight_g.requires_grad = False
 
-    def _init_weights(self, m):
+    @staticmethod
+    def _init_weights(m):
         if isinstance(m, nn.Linear):
             trunc_normal_(m.weight, std=0.02)
             if isinstance(m, nn.Linear) and m.bias is not None:

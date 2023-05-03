@@ -433,7 +433,8 @@ def create_dino_gym(
     )
     teacher_model = MultiCropModelWrapper(backbone=deepcopy(backbone), projection_head=projection_head)
     teacher_update_function = EmaTeacherUpdate(teacher_momentum)
-    optimizer_parameters = optimizer_parameters or dict(lr=0.0005, weight_decay=0.04)
+    lr = (unlabeled_train_loader.batch_size / 256) * 0.0005
+    optimizer_parameters = optimizer_parameters or dict(lr=lr, weight_decay=0.04)
     optimizer = optimizer(get_params_groups(student_model), **optimizer_parameters)
 
     if isinstance(resume_training_from_checkpoint, os.PathLike):

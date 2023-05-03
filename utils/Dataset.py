@@ -1,4 +1,5 @@
 import random
+from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Iterable, Callable, List, Tuple, Any, Sequence
 
@@ -12,6 +13,18 @@ from sparsam.data_augmentation import DinoAugmentationCropper
 from sparsam.utils import min_max_normalize_tensor
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+
+
+class BaseSet(ABC, Dataset):
+    @abstractmethod
+    def __getitem__(self, index: int) -> Tuple[Tensor, Tensor]:
+        """
+        :param index: which datapoint from the dataset to get
+        return:
+        img: the loaded and processed image
+        label: if dataset is labeled returns the corresponding image label or dummy label/ None
+        """
+        pass
 
 
 class ImageSet(Dataset):
@@ -39,8 +52,7 @@ class ImageSet(Dataset):
     def __len__(self):
         return len(self.img_paths)
 
-    def __getitem__(self, index):
-        # TODO: handle non RGB
+    def __getitem__(self, index: int):
         path = self.img_paths[index]
         if path.suffix == '.dcm':
             ds = pydicom.dcmread(path)
