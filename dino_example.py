@@ -10,7 +10,8 @@ from sklearn.preprocessing import PowerTransformer
 from sklearn.svm import SVC
 from torch.utils.data import DataLoader
 
-from sparsam.train import create_dino_gym
+from sparsam.loss import DINOLoss
+from sparsam.train import create_dino_gym, StudentTeacherGym
 from sparsam.utils import DummyLogger, model_inference, ModelMode
 from utils.Dataset import BaseSet
 
@@ -51,9 +52,11 @@ metrics = [
 # set if metrics require probability scores
 metrics_requires_probability = [False],
 
+################################ FIRST OPTION #########################################
+
 # There are further specific options like the scheduler, optimizer, data_augmentation etc. which may be chosen by the
 # user, but are not covered in this example. To see the options please inspect the "create_dino_gym" function
-dino_gym = create_dino_gym(
+gym = create_dino_gym(
     unalabeled_train_set=unlabeled_train_set,
     labeled_train_loader=labeled_train_loader,
     val_loader=val_loader,
@@ -73,8 +76,20 @@ dino_gym = create_dino_gym(
 # https://arxiv.org/abs/2104.14294 for details)
     teacher_momentum=0.9995
 )
+
+################################ SECOND OPTION #########################################
+# directly initialize the class, this adds a lot of custom options, but does not provide defaults. Here only the three
+# required options are listed, for more please see the documentation
+gym = StudentTeacherGym(
+    student_model=backbone, # for most setups a projection head is required, this can be found in utils
+    train_loader=DataLoader(unlabeled_train_set),
+    loss_function=DINOLoss(),
+    # for more options please see the class docs
+)
+
+
 # gym returns models after training. Also the models, optimizers etc are checkpointed regularly.
-student, teacher = dino_gym.train()
+student, teacher = gym.train()
 
 # extract train / test feature and label
 train_features, train_labels = model_inference(
@@ -88,3 +103,4 @@ test_labels = np.array(test_labels)
 classifier_pipeline.fit(train_features, train_labels)
 preds = classifier_pipeline(test_features)
 report = classification_report(test_labels, preds, output_dict=True, zero_division=0)
+

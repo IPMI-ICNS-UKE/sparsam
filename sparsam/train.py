@@ -48,25 +48,25 @@ from sparsam.utils import (
 
 class BaseGym(ABC):
     def __init__(
-        self,
-        model: nn.Module,
-        train_loader: DataLoader,
-        val_loader: DataLoader | None,
-        loss_function: Callable,
-        optimizer: Optimizer = None,
-        device: int | str = 'cuda',
-        lr_scheduler: BaseScheduler = None,
-        weight_decay_scheduler: BaseScheduler = None,
-        grad_clipper: Callable = None,
-        n_trainings_epochs: int = 100,
-        starting_step: int = 0,
-        metrics: Callable | List[Callable] = balanced_accuracy_score,
-        metrics_parameters: dict | List[dict] = None,
-        metrics_require_probabilities: bool | List[bool] = False,
-        model_saving_frequency: int = 250,
-        eval_frequency: int = None,
-        save_path: Path = None,
-        logger: BaseLogger = None,
+            self,
+            model: nn.Module,
+            train_loader: DataLoader,
+            val_loader: DataLoader | None,
+            loss_function: Callable,
+            optimizer: Optimizer = None,
+            device: int | str = 'cuda',
+            lr_scheduler: BaseScheduler = None,
+            weight_decay_scheduler: BaseScheduler = None,
+            grad_clipper: Callable = None,
+            n_trainings_epochs: int = 100,
+            starting_step: int = 0,
+            metrics: Callable | List[Callable] = balanced_accuracy_score,
+            metrics_parameters: dict | List[dict] = None,
+            metrics_require_probabilities: bool | List[bool] = False,
+            model_saving_frequency: int = 250,
+            eval_frequency: int = None,
+            save_path: Path = None,
+            logger: BaseLogger = None,
     ):
         self.model = model
         self.train_loader = train_loader
@@ -158,30 +158,64 @@ class BaseGym(ABC):
 
 class StudentTeacherGym(BaseGym):
     def __init__(
-        self,
-        student_model: nn.Module,
-        train_loader: DataLoader,
-        loss_function: Callable,
-        teacher_model: nn.Module = None,
-        teacher_update_function: Callable = None,
-        optimizer: Optimizer = None,
-        lr_scheduler: BaseScheduler = None,
-        weight_decay_scheduler: BaseScheduler = None,
-        grad_clipper: Callable = None,
-        device: int | str = 'cuda',
-        n_trainings_epochs: int = 100,
-        starting_step: int = 0,
-        val_loader: DataLoader = None,
-        labeled_train_loader: DataLoader = None,
-        classifier: ClassifierMixin = KNeighborsClassifier(),
-        eval_frequency: int = None,
-        model_saving_frequency: int = 250,
-        metrics: Callable | List[Callable] = balanced_accuracy_score,
-        metrics_parameters: dict | List[dict] = None,
-        metrics_require_probabilities: bool | List[bool] = False,
-        save_path: Path = None,
-        logger: BaseLogger = None,
+            self,
+            student_model: nn.Module,
+            train_loader: DataLoader,
+            loss_function: Callable,
+            teacher_model: nn.Module = None,
+            teacher_update_function: Callable = None,
+            student_slicing: slice = slice(0, -1, 1),
+            teacher_slicing: slice = slice(0, 2, 1),
+            optimizer: Optimizer = None,
+            lr_scheduler: BaseScheduler = None,
+            weight_decay_scheduler: BaseScheduler = None,
+            grad_clipper: Callable = None,
+            device: int | str = 'cuda',
+            n_trainings_epochs: int = 100,
+            starting_step: int = 0,
+            val_loader: DataLoader = None,
+            labeled_train_loader: DataLoader = None,
+            classifier: ClassifierMixin = KNeighborsClassifier(),
+            eval_frequency: int = None,
+            model_saving_frequency: int = 250,
+            metrics: Callable | List[Callable] = balanced_accuracy_score,
+            metrics_parameters: dict | List[dict] = None,
+            metrics_require_probabilities: bool | List[bool] = False,
+            save_path: Path = None,
+            logger: BaseLogger = None,
     ):
+        """
+        :param student_model: Complete student model (backbone + projection head)
+        :param train_loader: Dataloader for the Self Supervised trainings data must return 2 values: img, meta.
+        img maybe a list or tensor and ist then sliced according to the provided slicing for different student and
+        teacher views
+        :param loss_function: criterion to be optimized
+        :param teacher_model: the teacher model, if None is provided the student architecture is used.
+        :param teacher_update_function: a function on how to update the teacher. Must be callable and take the
+        following arguments: teacher_update_function(teacher, student)
+        :param student_slicing: often different views are used for student and teacher. This slicing is used to provide
+        views for the student model
+        :param teacher_slicing: teacher model slicing. Fore more info see student_slicing
+        :param optimizer: the already initialized optimizer for the student
+        :param lr_scheduler: a callable lr scheduler, must take step argument and return lr
+        :param weight_decay_scheduler: callable weight decay scheduler, must take step argument and return wd
+        :param grad_clipper: callable that online clips gradients, must take parameters as input
+        :param device: the device to train on: either GPU index or "cpu"/ "cuda"
+        :param n_trainings_epochs: How many epochs to train
+        :param starting_step: if the training is continued from where to start
+        :param val_loader: if provided online validation will be performed, requires labeled_train_loader and classifier
+        :param labeled_train_loader: if val_loader is provided this provides the trainings data
+        :param classifier: classifier to use for val data, must follow scikit learn api
+        :param eval_frequency: How often to evaluate
+        :param model_saving_frequency: How often to save the model
+        :param metrics: Which metrics to use, should be callable and follow scikit learn api (Label, pred). If a list is
+        provided, multiple metrics are calculated.
+        :param metrics_parameters: additional parameter used while calculation the metrics. Should be a dict or list of
+        dicts, if multiple metrics
+        :param metrics_require_probabilities: whether to use probabilities or predictions for a given metric
+        :param save_path: where to save the models/ optimizer to
+        :param logger: Object to log loss and metrics. Must provide log function and take step argument. wanndb works
+        """
         super().__init__(
             model=student_model,
             train_loader=train_loader,
@@ -223,6 +257,8 @@ class StudentTeacherGym(BaseGym):
 
         self.student_model = self.model
         self.teacher_model = teacher_model or deepcopy(student_model)
+        self.student_slicing = student_slicing
+        self.teacher_slicing = teacher_slicing
         self.teacher_update = teacher_update_function
 
     def train(self) -> Tuple[nn.Module, nn.Module]:
@@ -271,12 +307,12 @@ class StudentTeacherGym(BaseGym):
         self.teacher_model.train()
         self.student_model.train()
         with torch.no_grad():
-            teacher_out = self.teacher_model(images[:2])
+            teacher_out = self.teacher_model(images[self.teacher_slicing])
         student_out = self.student_model(images)
         return teacher_out, student_out
 
     def _prepare_trainings_batch(
-        self, batch: Tuple[any, List[Tensor] | Tensor] | List[Tensor]
+            self, batch: Tuple[any, List[Tensor] | Tensor] | List[Tensor]
     ) -> List[Tensor] | Tensor:
         # assumes first elem of return values to be the image or list of images
         if isinstance(batch, list) and not isinstance(batch[0], Tensor):
@@ -324,53 +360,101 @@ class StudentTeacherGym(BaseGym):
 
 
 def create_dino_gym(
-    # if Dataset is provided, standard Dino DataAugmentation is applied. train_loader parameter must be given
-    unalabeled_train_set: Dataset = None,
-    labeled_train_loader: DataLoader = None,
-    val_loader: DataLoader = None,
-    backbone_model: nn.Module = None,  # default: XCiT_small_12_p8
-    classifier: ClassifierMixin = None,
-    n_trainings_epochs: int = 250,
-    save_path: Path = None,
-    device: int | str = 'cuda',
-    eval_frequency: int = 100,
-    model_saving_frequency: int = 250,
-    logger: BaseLogger = None,
-    metrics: Callable | List[Callable] = balanced_accuracy_score,
-    metrics_parameters: dict | List[dict] = None,
-    metrics_requires_probability: bool | List[bool] = False,
-    # only used in combination with train_set
-    image_resolution: int = None,  # default is 224
-    # if train_loader is given it is assumed the loader returns augmented images. This omits all other DA!
-    unlabeled_train_loader_parameters: dict = None,
-    unlabeled_train_loader: DataLoader = None,
-    # used to resume training
-    resume_training_from_checkpoint: int | Path | str = False,
-    optimizer_state_dict: dict = None,
-    # more optional parameters, that might be useful in special cases, but are generally well performing with defaults
-    n_global_crops: int = 2,
-    n_local_crops: int = 5,
-    global_crops_scale: Tuple[float, float] = (0.5, 1),
-    local_crops_scale: Tuple[float, float] = (0.1, 0.5),
-    projection_head_out_dim: int = 65536,
-    projection_head_hidden_dim: int = 2048,
-    projection_head_bottleneck_dim: int = 256,
-    projection_head_n_layers: int = 4,
-    warmup_teacher_temp: float = 0.02,
-    teacher_temp: float = 0.04,
-    warmup_teacher_temp_iterations: int = None,  # default: 2 epochs
-    student_temp=0.1,
-    center_momentum=0.9,
-    grad_clip_factor: float = 0.32,
-    freeze_last_layer_iterations: int = None,  # default: 1 epoch
-    teacher_momentum: float = 0.9995,
-    final_lr: float = 0,
-    lr_scheduler_warm_up_iterations: int = None,  # default: 2 epochs
-    final_weight_decay: float = 0.4,
-    optimizer: Optimizer = AdamW,  # default: AdamW
-    optimizer_parameters: dict = None,  # default lr: 0.0005, wd: 0.04
-    grad_clipper: Callable = None,  # default adaptive grad clipping
+        # if Dataset is provided, standard Dino DataAugmentation is applied. train_loader parameter must be given
+        unalabeled_train_set: Dataset,
+        labeled_train_loader: DataLoader = None,
+        val_loader: DataLoader = None,
+        backbone_model: nn.Module = None,  # default: XCiT_small_12_p8
+        classifier: ClassifierMixin = None,
+        n_trainings_epochs: int = 250,
+        save_path: Path = None,
+        device: int | str = 'cuda',
+        eval_frequency: int = 100,
+        model_saving_frequency: int = 250,
+        logger: BaseLogger = None,
+        metrics: Callable | List[Callable] = balanced_accuracy_score,
+        metrics_parameters: dict | List[dict] = None,
+        metrics_requires_probability: bool | List[bool] = False,
+        # only used in combination with train_set
+        image_resolution: int = None,  # default is 224
+        # if train_loader is given it is assumed the loader returns augmented images. This omits all other DA!
+        unlabeled_train_loader_parameters: dict = None,
+        unlabeled_train_loader: DataLoader = None,
+        # used to resume training
+        resume_training_from_checkpoint: int | Path | str = False,
+        optimizer_state_dict: dict = None,
+        # more optional parameters, that might be useful in special cases, but are generally well performing with defaults
+        n_global_crops: int = 2,
+        n_local_crops: int = 5,
+        student_slicing: slice = slice(0, -1, 1),
+        teacher_slicing: slice = slice(0, 2, 1),
+        global_crops_scale: Tuple[float, float] = (0.5, 1),
+        local_crops_scale: Tuple[float, float] = (0.1, 0.5),
+        projection_head_out_dim: int = 65536,
+        projection_head_hidden_dim: int = 2048,
+        projection_head_bottleneck_dim: int = 256,
+        projection_head_n_layers: int = 4,
+        warmup_teacher_temp: float = 0.02,
+        teacher_temp: float = 0.04,
+        warmup_teacher_temp_iterations: int = None,  # default: 2 epochs
+        student_temp=0.1,
+        center_momentum=0.9,
+        grad_clip_factor: float = 0.32,
+        freeze_last_layer_iterations: int = None,  # default: 1 epoch
+        teacher_momentum: float = 0.9995,
+        final_lr: float = 0,
+        lr_scheduler_warm_up_iterations: int = None,  # default: 2 epochs
+        final_weight_decay: float = 0.4,
+        optimizer: Optimizer = AdamW,  # default: AdamW
+        optimizer_parameters: dict = None,  # default lr: 0.0005, wd: 0.04
+        grad_clipper: Callable = None,  # default adaptive grad clipping
 ) -> StudentTeacherGym:
+    """
+    :param unalabeled_train_set:
+    :param labeled_train_loader:
+    :param val_loader:
+    :param backbone_model:
+    :param classifier:
+    :param n_trainings_epochs:
+    :param save_path:
+    :param device:
+    :param eval_frequency:
+    :param model_saving_frequency:
+    :param logger:
+    :param metrics:
+    :param metrics_parameters:
+    :param metrics_requires_probability:
+    :param image_resolution:
+    :param unlabeled_train_loader_parameters:
+    :param unlabeled_train_loader:
+    :param resume_training_from_checkpoint:
+    :param optimizer_state_dict:
+    :param n_global_crops:
+    :param n_local_crops:
+    :param student_slicing:
+    :param teacher_slicing:
+    :param global_crops_scale:
+    :param local_crops_scale:
+    :param projection_head_out_dim:
+    :param projection_head_hidden_dim:
+    :param projection_head_bottleneck_dim:
+    :param projection_head_n_layers:
+    :param warmup_teacher_temp:
+    :param teacher_temp:
+    :param warmup_teacher_temp_iterations:
+    :param student_temp:
+    :param center_momentum:
+    :param grad_clip_factor:
+    :param freeze_last_layer_iterations:
+    :param teacher_momentum:
+    :param final_lr:
+    :param lr_scheduler_warm_up_iterations:
+    :param final_weight_decay:
+    :param optimizer:
+    :param optimizer_parameters:
+    :param grad_clipper:
+    :return:
+    """
     if unalabeled_train_set and unlabeled_train_loader:
         Warning('train_set and train_loader arguments are provided. Only train_loader is used')
     if unlabeled_train_loader and image_resolution:
@@ -486,6 +570,8 @@ def create_dino_gym(
         train_loader=unlabeled_train_loader,
         student_model=student_model,
         teacher_model=teacher_model,
+        student_slicing=student_slicing,
+        teacher_slicing=teacher_slicing,
         optimizer=optimizer,
         loss_function=loss_function,
         n_trainings_epochs=n_trainings_epochs,
@@ -514,28 +600,28 @@ def create_dino_gym(
 
 class SuperGym(BaseGym):
     def __init__(
-        self,
-        train_loader: DataLoader,
-        val_loader: DataLoader,
-        model: nn.Module,
-        loss_function: Callable = CrossEntropyLoss(),
-        optimizer: Optimizer = AdamW,
-        lr_scheduler: Callable = None,
-        weight_decay_scheduler: Callable = None,
-        grad_clipper: Callable = None,
-        n_trainings_epochs: int = 100,
-        starting_step: int = 0,
-        metrics: Callable | List[Callable] = balanced_accuracy_score,
-        metrics_parameters: dict | List[dict] = None,
-        metrics_require_probabilities: bool | List[bool] = False,
-        early_stopper: Callable = None,
-        device: int = 'cuda',
-        eval_frequency: int = 100,
-        model_saving_frequency: int = 250,
-        save_path: os.PathLike = None,
-        finetune: bool = False,
-        class_names: List[str] = None,
-        logger: BaseLogger = None,
+            self,
+            train_loader: DataLoader,
+            val_loader: DataLoader,
+            model: nn.Module,
+            loss_function: Callable = CrossEntropyLoss(),
+            optimizer: Optimizer = AdamW,
+            lr_scheduler: Callable = None,
+            weight_decay_scheduler: Callable = None,
+            grad_clipper: Callable = None,
+            n_trainings_epochs: int = 100,
+            starting_step: int = 0,
+            metrics: Callable | List[Callable] = balanced_accuracy_score,
+            metrics_parameters: dict | List[dict] = None,
+            metrics_require_probabilities: bool | List[bool] = False,
+            early_stopper: Callable = None,
+            device: int = 'cuda',
+            eval_frequency: int = 100,
+            model_saving_frequency: int = 250,
+            save_path: os.PathLike = None,
+            finetune: bool = False,
+            class_names: List[str] = None,
+            logger: BaseLogger = None,
     ):
         super().__init__(
             model=model,
