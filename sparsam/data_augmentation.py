@@ -1,13 +1,9 @@
 import random
 
-import torch
 from typing import Sequence
-from PIL import ImageOps, ImageFilter, Image
-from torchvision.transforms import transforms, InterpolationMode, ToTensor
-from torchvision.transforms.functional import solarize
-from abc import ABC, abstractmethod, abstractproperty
-
-from sparsam.utils import min_max_normalize_tensor
+from PIL import ImageOps
+from torchvision.transforms import transforms, ToTensor
+from abc import ABC
 
 
 class BaseMultiCropper(ABC):
