@@ -78,10 +78,10 @@ class DinoAugmentationCropper(BaseMultiCropper):
 
     def __call__(self, image):
         crops = []
-        crops.append(min_max_normalize_tensor(self.global_transfo1(image), 0, 1))
-        crops.append(min_max_normalize_tensor(self.global_transfo2(image), 0, 1))
+        crops.append(self.global_transfo1(image))
+        crops.append(self.global_transfo2(image))
         for _ in range(self.n_local_crops):
-            crop = min_max_normalize_tensor(self.local_transfo(image), 0, 1)
+            crop = self.local_transfo(image)
             crops.append(crop)
         return crops
 

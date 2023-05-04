@@ -25,7 +25,6 @@ from torch.utils.data import DataLoader
 from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
-from Dataset import MultiCropDatasetWrapper
 from sparsam.data_augmentation import DinoAugmentationCropper
 from sparsam.helper import get_params_groups
 from sparsam.loss import DINOLoss
@@ -42,7 +41,7 @@ from sparsam.utils import (
     model_inference,
     optimizer_to_device,
     BaseScheduler,
-    ModelMode,
+    ModelMode, MultiCropDatasetWrapper,
 )
 from utils.Dataset import BaseSet
 

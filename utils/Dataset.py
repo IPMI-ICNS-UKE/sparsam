@@ -1,7 +1,7 @@
 import random
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Iterable, Callable, List, Tuple, Any, Sequence
+from typing import Callable, Tuple, Sequence, List
 
 import pydicom
 from torch import Tensor
@@ -9,7 +9,6 @@ from torchvision.transforms.functional import to_tensor
 from PIL import Image, ImageFile
 from torch.utils.data import Dataset
 
-from sparsam.data_augmentation import DinoAugmentationCropper
 from sparsam.utils import min_max_normalize_tensor
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -32,12 +31,16 @@ class BaseSet(ABC, Dataset):
         if self.data_augmentation:
             img = self.data_augmentation(img)
         if self.normalize:
-            img = to_tensor(img)
-            img = self.normalize(img, 0, 1)
+            if isinstance(img, list):
+                img = to_tensor(img)
+                img = self.normalize(img, 0, 1)
+            else:
+                img = to_tensor(img)
+                img = self.normalize(img, 0, 1)
         return img, label
 
     @abstractmethod
-    def _get_image_label_pair(self, index: int) -> Tuple[Tensor | Image, Tensor | int | None]:
+    def _get_image_label_pair(self, index: int) -> Tuple[Tensor | Image | List[Tensor, Image], Tensor | int | None]:
         """
         :param index: which datapoint from the dataset to get
         return:
@@ -55,9 +58,10 @@ class ImageSet(BaseSet):
             img_size: int | Sequence[int] = (256, 256),
             data_augmentation: Callable = None,
             class_names: Sequence[str] = None,
-            normalize: Callable | bool = False,
+            normalize: Callable | bool = True,
     ):
-        super().__init__(data_augmentation=data_augmentation)
+        super().__init__(data_augmentation=data_augmentation,
+                         normalize=normalize)
         self.img_paths = img_paths
         self.labels = labels
         if class_names:
@@ -67,7 +71,6 @@ class ImageSet(BaseSet):
         if not isinstance(img_size, tuple):
             img_size = (img_size, img_size)
         self.img_size = img_size
-        self.normalize = normalize
 
     def __len__(self):
         return len(self.img_paths)
