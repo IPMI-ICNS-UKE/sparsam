@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -5,26 +7,18 @@ import torch.nn.functional as F
 from torch import Tensor
 
 
-class DINOLoss(nn.Module):
-    # Adopted from Facebook, Inc. and its affiliates https://github.com/facebookresearch/dino
+class BaseDinoLoss(nn.Module, ABC):
     def __init__(
-        self,
-        n_crops: int = 7,
-        student_temp: float = 0.1,
-        warmup_teacher_temp: float = 0.04,
-        teacher_temp: float = 0.04,
-        warmup_teacher_temp_iterations: int = 0,
-        center_momentum: float = 0.9,
-            out_dim=None,
-    ) -> Tensor:
+            self,
+            n_crops: int = 7,
+            student_temp: float = 0.1,
+            teacher_temp: float = 0.04,
+
+            warmup_teacher_temp: float = 0.04,
+            warmup_teacher_temp_iterations: int = 0,
+    ):
         super().__init__()
         self.n_crops = n_crops
-        self.center_momentum = center_momentum
-        if  not out_dim:
-            center = torch.empty(0)
-        else:
-            center = torch.zeros(1, out_dim)
-        self.register_buffer("center", center, persistent=True)
         self.step = 0
         self.student_temp = student_temp
         self.teacher_temp = teacher_temp
@@ -34,6 +28,44 @@ class DINOLoss(nn.Module):
             self.teacher_temp_slope = 0
         else:
             self.teacher_temp_slope = (teacher_temp - warmup_teacher_temp) / warmup_teacher_temp_iterations
+
+    @abstractmethod
+    def forward(self, student_output: Tensor, teacher_output: Tensor, step: int = None) -> Tensor:
+        pass
+
+    def _teacher_temp_schedule(self, step: int) -> float:
+        if step > self.warmup_teacher_temp_iterations:
+            teacher_temp = self.teacher_temp
+        else:
+            teacher_temp = self.warmup_teacher_temp + self.teacher_temp_slope * step
+        return teacher_temp
+
+
+class DINOLoss(BaseDinoLoss):
+    # Copyright (c) Facebook, Inc. and its affiliates.
+    def __init__(
+            self,
+            n_crops: int = 7,
+            student_temp: float = 0.1,
+            warmup_teacher_temp: float = 0.04,
+            teacher_temp: float = 0.04,
+            warmup_teacher_temp_iterations: int = 0,
+            center_momentum: float = 0.9,
+            out_dim=None,
+    ):
+        super().__init__(
+            n_crops=n_crops,
+            student_temp=student_temp,
+            warmup_teacher_temp=warmup_teacher_temp,
+            teacher_temp=teacher_temp,
+            warmup_teacher_temp_iterations=warmup_teacher_temp_iterations,
+        )
+        self.center_momentum = center_momentum
+        if not out_dim:
+            center = torch.empty(0)
+        else:
+            center = torch.zeros(1, out_dim)
+        self.register_buffer("center", center, persistent=True)
 
     def forward(self, student_output: Tensor, teacher_output: Tensor, step: int = None) -> Tensor:
         """
@@ -77,13 +109,6 @@ class DINOLoss(nn.Module):
         else:
             # ema update
             self.center = self.center * self.center_momentum + batch_center * (1 - self.center_momentum)
-
-    def _teacher_temp_schedule(self, step: int) -> float:
-        if step > self.warmup_teacher_temp_iterations:
-            teacher_temp = self.teacher_temp
-        else:
-            teacher_temp = self.warmup_teacher_temp + self.teacher_temp_slope * step
-        return teacher_temp
 
     def _prepare_teacher_output(self, teacher_output: Tensor) -> Tensor:
         temp = self._teacher_temp_schedule(self.step)
