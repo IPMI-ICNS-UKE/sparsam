@@ -33,7 +33,7 @@ backbone = timm.models.VisionTransformer()
 
 # Option One: creating the DINO training Setup with default parameters:
 # TODO: provide machine specific dataloader parameter
-data_loader_parameter = {}
+data_loader_parameter = dict(batch_size=256)
 # TODO: choose your classifier, any one following the sklearn api works
 classifier_pipeline = Pipeline([
     ('standardizer', PowerTransformer()),
@@ -87,6 +87,8 @@ gym = StudentTeacherGym(
     loss_function=DINOLoss(),
     # for more options please see the class docs
 )
+
+#######################################################################################
 
 # gym returns models after training. Also the models, optimizers etc are checkpointed regularly.
 student, teacher = gym.train()
