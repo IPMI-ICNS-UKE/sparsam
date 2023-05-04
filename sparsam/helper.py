@@ -6,6 +6,7 @@ from typing import Mapping, Sequence, List, Tuple
 
 import numpy as np
 import torch
+from torch import Tensor
 
 
 def recursive_dict():
@@ -161,6 +162,6 @@ def _no_grad_trunc_normal_(tensor, mean, std, a, b):
         return tensor
 
 
-def trunc_normal_(tensor: Tesnsor, mean: float = 0.0, std: float = 1.0, a: float = -2.0, b: float = 2.0):
+def trunc_normal_(tensor: Tensor, mean: float = 0.0, std: float = 1.0, a: float = -2.0, b: float = 2.0):
     # Copied from Facebook, Inc. and its affiliates https://github.com/facebookresearch/dino
     return _no_grad_trunc_normal_(tensor, mean, std, a, b)

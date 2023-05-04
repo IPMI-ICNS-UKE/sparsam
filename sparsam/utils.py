@@ -16,7 +16,6 @@ from torch.cuda.amp import autocast
 from torch.optim import Optimizer
 from torch.utils.data.dataset import Dataset
 
-from sparsam.data_augmentation import DinoAugmentationCropper
 from sparsam.helper import trunc_normal_, recursive_dict
 
 

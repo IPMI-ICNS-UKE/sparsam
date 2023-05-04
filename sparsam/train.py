@@ -16,13 +16,12 @@ import numpy as np
 from sklearn.base import ClassifierMixin
 from sklearn.metrics import balanced_accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
-from torch import Tensor
+from torch import Tensor, TensorType
 from torch.cuda.amp import GradScaler, autocast
 from torch.nn import CrossEntropyLoss
 from torch.optim.adamw import AdamW
 from torch.optim.optimizer import Optimizer
 from torch.utils.data import DataLoader
-from torch.utils.data.dataset import Dataset
 from tqdm import tqdm
 
 from sparsam.data_augmentation import DinoAugmentationCropper
@@ -41,9 +40,10 @@ from sparsam.utils import (
     model_inference,
     optimizer_to_device,
     BaseScheduler,
-    ModelMode, MultiCropDatasetWrapper,
+    ModelMode,
+    MultiCropDatasetWrapper,
 )
-from utils.Dataset import BaseSet
+from sparsam.dataset import BaseSet
 
 
 class BaseGym(ABC):
@@ -113,9 +113,12 @@ class BaseGym(ABC):
         """Implements the extraction of validation prediction_probabilities and validation labels and returns them"""
         pass
 
-    def _eval_model(self, model):
+    def _eval_model(self, model: nn.Module) -> dict:
         predictions_prob, val_labels = self._predict_val_samples(model)
-        predictions = np.argmax(predictions_prob, axis=-1)
+        if np.allclose(predictions_prob.sum(-1), 1):
+            predictions = np.argmax(predictions_prob, axis=-1)
+        else:
+            predictions = np.round(predictions_prob)
         metric_dict = dict()
         for metric, requires_probability in zip(self.metrics, self.metrics_require_probabilities):
             if requires_probability:
@@ -124,7 +127,7 @@ class BaseGym(ABC):
                 metric_dict[metric.func.__name__] = metric(val_labels, predictions)
         return metric_dict
 
-    def _model_backprop(self, loss: torch.TensorType):
+    def _model_backprop(self, loss: TensorType):
         self.scaler.scale(loss).backward()
         self.scaler.unscale_(self.optimizer)
         if self.grad_clipper:
@@ -345,7 +348,9 @@ class StudentTeacherGym(BaseGym):
         train_features, train_labels = self._extract_features(self.labeled_train_loader, model)
         val_features, val_labels = self._extract_features(self.val_loader, model)
         self.classifier.fit(train_features, train_labels)
-        predictions_prob = self.classifier.predict_proba(val_features)
+        predictions_prob = np.asarray(self.classifier.predict_proba(val_features))
+        if predictions_prob.ndim > 2:
+            predictions_prob = predictions_prob[..., -1].transpose()
         return predictions_prob, val_labels
 
     def _save_training_state(self, step: int | str):
@@ -473,7 +478,8 @@ def create_dino_gym(
         local_crops_scale=local_crops_scale,
         res=image_resolution or 224,
     )
-    unlabeled_train_set = MultiCropDatasetWrapper(unalabeled_train_set.set_data_augmentation(data_augmentation))
+    unalabeled_train_set.set_data_augmentation(data_augmentation)
+    unlabeled_train_set = MultiCropDatasetWrapper(unalabeled_train_set)
 
     unlabeled_train_loader = DataLoader(dataset=unlabeled_train_set, **unlabeled_train_loader_parameters)
 

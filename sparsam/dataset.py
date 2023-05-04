@@ -3,10 +3,12 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Callable, Tuple, Sequence, List
 
+import PIL
 import pydicom
 from torch import Tensor
 from torchvision.transforms.functional import to_tensor
-from PIL import Image, ImageFile
+from PIL import ImageFile, Image
+from PIL.Image import Image as ImageType
 from torch.utils.data import Dataset
 
 from sparsam.utils import min_max_normalize_tensor
@@ -40,7 +42,7 @@ class BaseSet(ABC, Dataset):
         return img, label
 
     @abstractmethod
-    def _get_image_label_pair(self, index: int) -> Tuple[Tensor | Image | List[Tensor, Image], Tensor | int | None]:
+    def _get_image_label_pair(self, index: int) -> Tuple[Tensor | ImageType | List[Tensor | ImageType], Tensor | int | None]:
         """
         :param index: which datapoint from the dataset to get
         return:
@@ -75,7 +77,7 @@ class ImageSet(BaseSet):
     def __len__(self):
         return len(self.img_paths)
 
-    def _get_image_label_pair(self, index: int) -> Tuple[Image, int]:
+    def _get_image_label_pair(self, index: int) -> Tuple[ImageType, int]:
         path = self.img_paths[index]
         if path.suffix == '.dcm':
             ds = pydicom.dcmread(path)

@@ -3,7 +3,7 @@ import os
 from copy import deepcopy
 from functools import partial
 from pathlib import Path
-from typing import Tuple, List, Sequence
+from typing import Tuple, Sequence
 
 import click
 import numpy as np
@@ -19,15 +19,12 @@ from sklearn.preprocessing import PowerTransformer
 from timm.optim import AdamW
 from timm.scheduler import PlateauLRScheduler
 from timm.utils import adaptive_clip_grad
-from torch import nn
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader, Dataset
 import git
 
-from utils.Dataset import ImageSet
+from sparsam.Dataset import ImageSet
 from parameter import MODEL, CLASSIFIERS
-
-import wandb
 
 from sparsam.data_augmentation import DinoAugmentationCropper
 from sparsam.helper import uniform_train_test_splitting, recursive_dict, _sort_class_names, get_large_classes, \
