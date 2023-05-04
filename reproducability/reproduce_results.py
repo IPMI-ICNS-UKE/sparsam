@@ -25,7 +25,7 @@ from torch.utils.data import DataLoader, Dataset
 import git
 
 from utils.Dataset import ImageSet
-from main.parameter import MODEL, CLASSIFIERS
+from parameter import MODEL, CLASSIFIERS
 
 import wandb
 
@@ -270,9 +270,6 @@ def run(
 
     for class_size in eval_class_sizes:
         for iteration in range(n_iterations):
-            sub_sampled_train_paths, sub_sampled_train_labels, _, _ = uniform_train_test_splitting(
-                labeled_train_paths, train_labels, n_samples_class=class_size, seed=iteration
-            )
             sub_sampled_train_paths, sub_sampled_train_labels, _, _ = uniform_train_test_splitting(
                 labeled_train_paths, train_labels, n_samples_class=class_size, seed=iteration
             )
