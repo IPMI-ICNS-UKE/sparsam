@@ -15,7 +15,8 @@ from sparsam.train import create_dino_gym, StudentTeacherGym
 from sparsam.utils import DummyLogger, model_inference, ModelMode
 from utils.Dataset import BaseSet
 
-# First step creating your Datasets / loader, must be following the api defined in BaseSet (returns: img, label)
+# First step creating your Datasets / loader, must be following the api defined in BaseSet (returns: img, label), the e
+# easiest way to achieve this is to inherit directly from the BaseSet
 # This dataset does not require labels and will be used for self supervised training NOTE: this will be internally
 # converted to dataloader object
 unlabeled_train_set = BaseSet()
@@ -70,10 +71,10 @@ gym = create_dino_gym(
         partial(classification_report, output_dict=True, zero_division=0),
     ],
     metrics_requires_probability=[True],
-# If you wish to continue the training set the resume_training_from_checkpoint argument with the patch to the checkpoint folder in "create_dino_gym"
+    # If you wish to continue the training set the resume_training_from_checkpoint argument with the patch to the checkpoint folder in "create_dino_gym"
     resume_training_from_checkpoint=False,
-# Note: should be scaled down for larger batch sizes (0.996 for a batch size of 512) and up for smaller ones (see
-# https://arxiv.org/abs/2104.14294 for details)
+    # Note: should be scaled down for larger batch sizes (0.996 for a batch size of 512) and up for smaller ones (see
+    # https://arxiv.org/abs/2104.14294 for details)
     teacher_momentum=0.9995
 )
 
@@ -81,12 +82,11 @@ gym = create_dino_gym(
 # directly initialize the class, this adds a lot of custom options, but does not provide defaults. Here only the three
 # required options are listed, for more please see the documentation
 gym = StudentTeacherGym(
-    student_model=backbone, # for most setups a projection head is required, this can be found in utils
+    student_model=backbone,  # for most setups a projection head is required, this can be found in utils
     train_loader=DataLoader(unlabeled_train_set),
     loss_function=DINOLoss(),
     # for more options please see the class docs
 )
-
 
 # gym returns models after training. Also the models, optimizers etc are checkpointed regularly.
 student, teacher = gym.train()
@@ -103,4 +103,3 @@ test_labels = np.array(test_labels)
 classifier_pipeline.fit(train_features, train_labels)
 preds = classifier_pipeline(test_features)
 report = classification_report(test_labels, preds, output_dict=True, zero_division=0)
-

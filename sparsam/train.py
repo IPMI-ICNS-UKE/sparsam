@@ -44,6 +44,7 @@ from sparsam.utils import (
     BaseScheduler,
     ModelMode,
 )
+from utils.Dataset import BaseSet
 
 
 class BaseGym(ABC):
@@ -361,7 +362,7 @@ class StudentTeacherGym(BaseGym):
 
 def create_dino_gym(
         # if Dataset is provided, standard Dino DataAugmentation is applied. train_loader parameter must be given
-        unalabeled_train_set: Dataset,
+        unalabeled_train_set: BaseSet,
         labeled_train_loader: DataLoader = None,
         val_loader: DataLoader = None,
         backbone_model: nn.Module = None,  # default: XCiT_small_12_p8
@@ -466,16 +467,15 @@ def create_dino_gym(
     if optimizer_state_dict and isinstance(resume_training_from_checkpoint, os.PathLike):
         Warning('optimizer_state_dict will be overwritten by loaded state_dict')
 
-    unlabeled_train_set = MultiCropDatasetWrapper(
-        dataset=unalabeled_train_set,
-        data_cropper=DinoAugmentationCropper(
-            n_global_crops=n_global_crops,
-            n_local_crops=n_local_crops,
-            global_crops_scale=global_crops_scale,
-            local_crops_scale=local_crops_scale,
-            res=image_resolution or 224,
-        ),
+    data_augmentation = DinoAugmentationCropper(
+        n_global_crops=n_global_crops,
+        n_local_crops=n_local_crops,
+        global_crops_scale=global_crops_scale,
+        local_crops_scale=local_crops_scale,
+        res=image_resolution or 224,
     )
+    unlabeled_train_set = MultiCropDatasetWrapper(unalabeled_train_set.set_data_augmentation(data_augmentation))
+
     unlabeled_train_loader = DataLoader(dataset=unlabeled_train_set, **unlabeled_train_loader_parameters)
 
     classifier = classifier or KNeighborsClassifier(n_neighbors=10, weights='distance')

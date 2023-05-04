@@ -325,10 +325,8 @@ class MultiCropModelWrapper(nn.Module):
 
 
 class MultiCropDatasetWrapper(Dataset):
-    def __init__(self, dataset: Dataset, data_cropper: callable = None):
-        super().__init__()
+    def __init__(self, dataset: Dataset):
         self.dataset = dataset
-        self.transform = data_cropper or DinoAugmentationCropper(2, 5)
 
     def __getitem__(self, idx: int) -> Tensor | Tuple[Tensor, Tuple[Any]]:
         data = self.dataset.__getitem__(idx)
@@ -339,10 +337,9 @@ class MultiCropDatasetWrapper(Dataset):
             # assumes image to be the first return value
             image = data[0]
             data = data[1:]
-        images = self.transform(image)
-        n_views = len(images)
+        n_views = len(image)
         data = [[d] * n_views for d in data]
-        return images, *data
+        return image, *data
 
     def __len__(self):
         return self.dataset.__len__()

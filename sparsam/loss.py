@@ -13,7 +13,6 @@ class BaseDinoLoss(nn.Module, ABC):
             n_crops: int = 7,
             student_temp: float = 0.1,
             teacher_temp: float = 0.04,
-
             warmup_teacher_temp: float = 0.04,
             warmup_teacher_temp_iterations: int = 0,
     ):
