@@ -35,7 +35,7 @@ class BaseSet(ABC, Dataset):
             if isinstance(img, list):
                 img = [self._normalize(view) for view in img]
             else:
-                img = self.normalize(img)
+                img = self._normalize(img)
         return img, label
 
     def _normalize(self, img: Tensor | ImageType):
