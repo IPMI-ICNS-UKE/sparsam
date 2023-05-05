@@ -1,9 +1,8 @@
-import random
 from abc import ABC, abstractmethod
+from functools import partial
 from pathlib import Path
 from typing import Callable, Tuple, Sequence, List
 
-import PIL
 import pydicom
 from torch import Tensor
 from torchvision.transforms.functional import to_tensor
@@ -22,7 +21,7 @@ class BaseSet(ABC, Dataset):
                  ):
         self.data_augmentation = data_augmentation
         if normalize is True:
-            normalize = min_max_normalize_tensor
+            normalize = partial(min_max_normalize_tensor, min_value=0, max_value=1)
         self.normalize = normalize
 
     def set_data_augmentation(self, data_augmentation: Callable):
@@ -34,10 +33,18 @@ class BaseSet(ABC, Dataset):
             img = self.data_augmentation(img)
         if self.normalize:
             if isinstance(img, list):
-                img = [self.normalize(to_tensor(view), 0, 1) for view in img]
+                img = [self._normalize(view) for view in img]
             else:
-                img = self.normalize(to_tensor(img), 0, 1)
+                img = self.normalize(img)
         return img, label
+
+    def _normalize(self, img: Tensor | ImageType):
+        if not isinstance(img, Tensor):
+            img = to_tensor(img)
+        if self.normalize:
+            img = self.normalize(img)
+        return img
+
 
     @abstractmethod
     def _get_image_label_pair(self, index: int) -> Tuple[Tensor | ImageType | List[Tensor | ImageType], Tensor | int | None]:
