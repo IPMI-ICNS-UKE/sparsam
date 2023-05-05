@@ -2,7 +2,8 @@ import random
 
 from typing import Sequence
 from PIL import ImageOps
-from torchvision.transforms import transforms, ToTensor
+from PIL.Image import Image as ImageType
+from torchvision.transforms import transforms
 from abc import ABC
 
 
@@ -45,7 +46,6 @@ class DinoAugmentationCropper(BaseMultiCropper):
                 transforms.RandomResizedCrop(res, scale=global_crops_scale),
                 flip_and_color_jitter,
                 GaussianBlur(p=1.0, radius_min=0.1, radius_max=5.0),
-                ToTensor(),
             ]
         )
         # second global crop
@@ -57,7 +57,6 @@ class DinoAugmentationCropper(BaseMultiCropper):
                 flip_and_color_jitter,
                 GaussianBlur(p=0.1, radius_min=0.1, radius_max=5.0),
                 Solarization(0.2),
-                ToTensor(),
             ]
         )
         # transformation for the local small crops
@@ -68,11 +67,10 @@ class DinoAugmentationCropper(BaseMultiCropper):
                 transforms.RandomResizedCrop(96, scale=local_crops_scale),
                 flip_and_color_jitter,
                 GaussianBlur(p=0.5, radius_min=0.1, radius_max=5.0),
-                ToTensor(),
             ]
         )
 
-    def __call__(self, image):
+    def __call__(self, image: ImageType) -> ImageType:
         crops = []
         crops.append(self.global_transfo1(image))
         crops.append(self.global_transfo2(image))
