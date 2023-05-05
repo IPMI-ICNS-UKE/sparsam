@@ -18,7 +18,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 class BaseSet(ABC, Dataset):
     def __init__(self, data_augmentation: Callable = None,
-                 normalize: Callable | bool = False
+                 normalize: Callable | bool = True
                  ):
         self.data_augmentation = data_augmentation
         if normalize is True:
