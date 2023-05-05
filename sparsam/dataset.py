@@ -34,11 +34,9 @@ class BaseSet(ABC, Dataset):
             img = self.data_augmentation(img)
         if self.normalize:
             if isinstance(img, list):
-                img = to_tensor(img)
-                img = self.normalize(img, 0, 1)
+                img = [self.normalize(to_tensor(view), 0, 1) for view in img]
             else:
-                img = to_tensor(img)
-                img = self.normalize(img, 0, 1)
+                img = self.normalize(to_tensor(img), 0, 1)
         return img, label
 
     @abstractmethod
