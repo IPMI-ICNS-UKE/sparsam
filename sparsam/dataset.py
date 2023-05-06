@@ -31,11 +31,10 @@ class BaseSet(ABC, Dataset):
         img, label = self._get_image_label_pair(index)
         if self.data_augmentation:
             img = self.data_augmentation(img)
-        if self.normalize:
-            if isinstance(img, list):
-                img = [self._normalize(view) for view in img]
-            else:
-                img = self._normalize(img)
+        if isinstance(img, list):
+            img = [self._normalize(view) for view in img]
+        else:
+            img = self._normalize(img)
         return img, label
 
     def _normalize(self, img: Tensor | ImageType):

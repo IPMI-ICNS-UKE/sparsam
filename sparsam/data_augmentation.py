@@ -1,10 +1,15 @@
 import random
 
 from typing import Sequence
+
+import numpy as np
 from PIL import ImageOps
 from PIL.Image import Image as ImageType
+from torch import Tensor
 from torchvision.transforms import transforms
 from abc import ABC
+
+from torchvision.transforms.functional import to_pil_image
 
 
 class BaseMultiCropper(ABC):
@@ -70,7 +75,9 @@ class DinoAugmentationCropper(BaseMultiCropper):
             ]
         )
 
-    def __call__(self, image: ImageType) -> ImageType:
+    def __call__(self, image: ImageType | Tensor | np.ndarray) -> ImageType:
+        if not isinstance(image, ImageType):
+            image = to_pil_image(image)
         crops = []
         crops.append(self.global_transfo1(image))
         crops.append(self.global_transfo2(image))
