@@ -85,12 +85,13 @@ class BaseGym(ABC):
 
         self.logger = logger or DummyLogger
 
-        metrics_parameters = metrics_parameters or dict()
+        metrics_parameters = metrics_parameters or {}
         if not isinstance(metrics, list):
             metrics = [metrics]
         if not isinstance(metrics_parameters, list):
-            metrics_parameters = [metrics_parameters]
-        self.metrics = [partial(metric, *params) for metric, params in zip(metrics, metrics_parameters)]
+            metrics_parameters = [metrics_parameters] * len(metrics)
+        self.metrics = [partial(metric, *params) if isinstance(metric, partial)
+                        else metric for metric, params in zip(metrics, metrics_parameters)]
         if not isinstance(metrics_require_probabilities, list):
             metrics_require_probabilities = [metrics_require_probabilities] * len(self.metrics)
         self.metrics_require_probabilities = metrics_require_probabilities
