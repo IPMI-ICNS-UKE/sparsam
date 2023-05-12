@@ -150,11 +150,10 @@ class BaseGym(ABC):
 
     def _init_tqdm_bar(self) -> tqdm:
         starting_epoch = self.starting_step // len(self.train_loader)
-        starting_step = starting_epoch * len(self.train_loader)
-        last_step = len(self.train_loader) * self.n_trainings_epochs
+        last_step = self.starting_step + len(self.train_loader) * (self.n_trainings_epochs - starting_epoch)
         epoch_bar = tqdm(
-            range(starting_step, last_step),
-            initial=starting_step,
+            range(self.starting_step, last_step),
+            initial=self.starting_step,
             total=last_step,
         )
         return epoch_bar
