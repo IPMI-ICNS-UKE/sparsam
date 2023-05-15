@@ -37,7 +37,7 @@ class DinoAugmentationCropper(BaseMultiCropper):
                 transforms.RandomHorizontalFlip(p=0.5),
                 transforms.RandomVerticalFlip(p=0.5),
                 transforms.RandomApply(
-                    [transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.7, hue=0.2)], p=1.0
+                    [transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.2, hue=0.1)], p=0.8
                 ),
                 transforms.RandomGrayscale(p=0.2),
             ]
@@ -46,7 +46,7 @@ class DinoAugmentationCropper(BaseMultiCropper):
         # first global crop
         self.global_transfo1 = transforms.Compose(
             [
-                transforms.RandomPerspective(distortion_scale=0.5),
+                transforms.RandomPerspective(distortion_scale=0.5, p=0.75),
                 transforms.RandomRotation(180),
                 transforms.RandomResizedCrop(res, scale=global_crops_scale),
                 flip_and_color_jitter,
@@ -67,7 +67,7 @@ class DinoAugmentationCropper(BaseMultiCropper):
         # transformation for the local small crops
         self.local_transfo = transforms.Compose(
             [
-                transforms.RandomPerspective(distortion_scale=0.5),
+                transforms.RandomPerspective(distortion_scale=0.5, p=0.5),
                 transforms.RandomRotation(180),
                 transforms.RandomResizedCrop(96, scale=local_crops_scale),
                 flip_and_color_jitter,

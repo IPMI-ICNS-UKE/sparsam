@@ -158,7 +158,8 @@ class DinoGradClipper:
         if self.step < self.freeze_last_layer_iterations:
             for n, p in model.named_parameters():
                 if "last_layer" in n:
-                    p.grad = None
+                    if p.requires_grad:
+                        p.grad = None
 
 
 class BaseLogger(ABC):

@@ -90,7 +90,7 @@ class BaseGym(ABC):
             metrics = [metrics]
         if not isinstance(metrics_parameters, list):
             metrics_parameters = [metrics_parameters] * len(metrics)
-        self.metrics = [partial(metric, *params) if isinstance(metric, partial)
+        self.metrics = [partial(metric, **params) if not isinstance(metric, partial)
                         else metric for metric, params in zip(metrics, metrics_parameters)]
         if not isinstance(metrics_require_probabilities, list):
             metrics_require_probabilities = [metrics_require_probabilities] * len(self.metrics)
@@ -122,10 +122,14 @@ class BaseGym(ABC):
             predictions = np.round(predictions_prob)
         metric_dict = dict()
         for metric, requires_probability in zip(self.metrics, self.metrics_require_probabilities):
-            if requires_probability:
-                metric_dict[metric.func.__name__] = metric(val_labels, predictions_prob)
+            if isinstance(metric, partial):
+                metric_name = metric.func.__name__
             else:
-                metric_dict[metric.func.__name__] = metric(val_labels, predictions)
+                metric_name = metric.__name__
+            if requires_probability:
+                metric_dict[metric_name] = metric(val_labels, predictions_prob)
+            else:
+                metric_dict[metric_name] = metric(val_labels, predictions)
         return metric_dict
 
     def _model_backprop(self, loss: TensorType):
@@ -311,7 +315,7 @@ class StudentTeacherGym(BaseGym):
         self.student_model.train()
         with torch.no_grad():
             teacher_out = self.teacher_model(images[self.teacher_slicing])
-        student_out = self.student_model(images)
+        student_out = self.student_model(images[self.student_slicing])
         return teacher_out, student_out
 
     def _prepare_trainings_batch(
@@ -391,7 +395,7 @@ def create_dino_gym(
         # more optional parameters, that might be useful in special cases, but are generally well performing with defaults
         n_global_crops: int = 2,
         n_local_crops: int = 5,
-        student_slicing: slice = slice(0, -1, 1),
+        student_slicing: slice = slice(None),
         teacher_slicing: slice = slice(0, 2, 1),
         global_crops_scale: Tuple[float, float] = (0.5, 1),
         local_crops_scale: Tuple[float, float] = (0.1, 0.5),
@@ -494,12 +498,11 @@ def create_dino_gym(
         loss_state_dict = torch.load(dict_dic / f'loss_{step}.pt')
         scaler_state_dict = torch.load(dict_dic / f'scaler_{step}.pt')
         step = int(step) + 1
-
-    elif isinstance(resume_training_from_checkpoint, int):
+    elif isinstance(resume_training_from_checkpoint, int) and not isinstance(resume_training_from_checkpoint, bool):
         step = resume_training_from_checkpoint + 1
-
     else:
         step = 0
+
 
     backbone = backbone_model or timm.models.xcit_small_12_p8_224_dist(in_chans=3, num_classes=0, pretrained=True)
     projection_head = ProjectionHead(

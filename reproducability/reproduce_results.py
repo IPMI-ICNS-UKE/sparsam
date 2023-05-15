@@ -216,6 +216,7 @@ def run(
             logger=logger,
             unlabeled_train_loader_parameters=data_loader_parameter,
             save_path=save_path,
+            image_resolution=config['dataset']['image_resolution'],
             **config['gym'],
         )
         _, model = dino_gym.train()
@@ -287,7 +288,7 @@ def run(
                 img_paths=sub_sampled_train_paths,
                 labels=sub_sampled_train_labels,
                 class_names=class_names,
-                normalize=False,
+                normalize=True,
                 img_size=config['dataset']['image_resolution'],
             )
             train_set = MultiCropDatasetWrapper(
@@ -377,7 +378,7 @@ def create_unlabeled_train_set(
         total_train_paths = [image_root_path / Path(img) for img in total_train_paths]
     data_set_parameter = data_set_parameter or {}
     unlabeled_train_set = ImageSet(
-        img_paths=total_train_paths, class_names=class_names, normalize=False, **data_set_parameter
+        img_paths=total_train_paths, class_names=class_names, normalize=True, **data_set_parameter
     )
     return unlabeled_train_set
 
