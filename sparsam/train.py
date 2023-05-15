@@ -489,8 +489,9 @@ def create_dino_gym(
 
     classifier = classifier or KNeighborsClassifier(n_neighbors=10, weights='distance')
 
-    if Path(resume_training_from_checkpoint).exists():
-        resume_training_from_checkpoint = Path(resume_training_from_checkpoint)
+    if resume_training_from_checkpoint and not isinstance(resume_training_from_checkpoint, bool):
+        if Path(resume_training_from_checkpoint).exists():
+            resume_training_from_checkpoint = Path(resume_training_from_checkpoint)
 
     if isinstance(resume_training_from_checkpoint, os.PathLike):
         dict_dic = Path(resume_training_from_checkpoint)
