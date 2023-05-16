@@ -38,7 +38,7 @@ data_loader_parameter = dict(batch_size=256)
 classifier_pipeline = Pipeline([
     ('standardizer', PowerTransformer()),
     ('pca', PCA()),
-    ('classifier', SVC())
+    ('classifier', SVC(probability=True))
 ])
 # TODO: chooes logging tool: any logger with a log function works. We tested our JsonLogger and wandb.
 logger = DummyLogger()
@@ -46,7 +46,7 @@ logger = DummyLogger()
 save_path = Path()
 # TODO: choose device
 device = 'cuda'
-# TODO choose metrics: they will be logged, multiple metrics are allowd via a list
+# TODO choose metrics: they will be logged, multiple metrics are allowed via a list
 metrics = [
     partial(classification_report, output_dict=True, zero_division=0),
 ],
