@@ -40,8 +40,11 @@ classifier_pipeline = Pipeline([
     ('pca', PCA()),
     ('classifier', SVC(probability=True))
 ])
-# TODO: chooes logging tool: any logger with a log function works. We tested our JsonLogger and wandb.
+# TODO: choose logging tool: any logger with a log function works. We tested our JsonLogger and wandb.
 logger = DummyLogger()
+# wandb.init(...)
+# logger = wandb
+
 # TODO: save_path: base path were to save models
 save_path = Path()
 # TODO: choose device
@@ -90,7 +93,7 @@ gym = StudentTeacherGym(
 
 #######################################################################################
 
-# gym returns models after training. Also the models, optimizers etc are checkpointed regularly.
+# gym returns models after training. Also, the models, optimizers etc. are checkpointed regularly.
 student, teacher = gym.train()
 
 # extract train / test feature and label
