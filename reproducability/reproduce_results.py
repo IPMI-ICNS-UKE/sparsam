@@ -23,7 +23,7 @@ from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader, Dataset
 import git
 
-from sparsam.Dataset import ImageSet
+from sparsam.dataset import ImageSet
 from parameter import MODEL, CLASSIFIERS
 
 from sparsam.data_augmentation import DinoAugmentationCropper

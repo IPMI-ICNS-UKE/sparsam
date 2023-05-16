@@ -87,7 +87,7 @@ class ImageSet(BaseSet):
             ds = pydicom.dcmread(path)
             img = Image.fromarray(ds.pixel_array, 'RGB')
         else:
-            img = Image.open(path)
+            img = Image.open(path).convert('RGB')
         img = img.resize(self.img_size, Image.NEAREST)
         if self.labels is not None:
             label = self.labels[index]

@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 from sparsam.loss import DINOLoss
 from sparsam.train import create_dino_gym, StudentTeacherGym
 from sparsam.utils import DummyLogger, model_inference, ModelMode
-from sparsam.Dataset import BaseSet
+from sparsam.dataset import BaseSet
 
 # First step creating your Datasets / loader, must be following the api defined in BaseSet (returns: img, label), the e
 # easiest way to achieve this is to inherit directly from the BaseSet

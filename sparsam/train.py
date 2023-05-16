@@ -569,8 +569,6 @@ def create_dino_gym(
     wd_scheduler = DinoWdScheduler(optimizer=optimizer, scheduler=wd_cosine_scheduler)
 
     freeze_last_layer_iterations = freeze_last_layer_iterations or len(unlabeled_train_loader)
-    if resume_training_from_checkpoint:
-        freeze_last_layer_iterations = max(freeze_last_layer_iterations - step, 0)
     grad_clipper = grad_clipper or DinoGradClipper(
         freeze_last_layer_iterations=freeze_last_layer_iterations, clip_factor=grad_clip_factor
     )
