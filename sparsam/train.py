@@ -281,7 +281,9 @@ class StudentTeacherGym(BaseGym):
                 step = epoch_bar.n
                 self.optimizer.zero_grad(True)
                 images = self._prepare_trainings_batch(batch)
-                loss_val = self._model_update(images)
+                loss = self._model_update(images)
+                if not isinstance(loss, dict):
+                    loss = dict(loss=loss)
                 self._update_lr_wd(step=step)
 
                 if step % self.eval_f == 0 and self.val_loader and self.labeled_train_loader:
@@ -291,9 +293,9 @@ class StudentTeacherGym(BaseGym):
                 if self.save_path and step % self.save_f == 0:
                     self._save_training_state(step)
 
-                self.logger.log(dict(loss=loss_val), step=step)
+                self.logger.log(dict(loss=loss), step=step)
                 epoch_bar.update(1)
-                epoch_bar.set_description(desc=f"loss={loss_val:.4f}")
+                epoch_bar.set_description(desc=f"loss={loss['loss']:.4f}")
         self.student_model.to('cpu')
         self.teacher_model.to('cpu')
         return self.student_model, self.teacher_model

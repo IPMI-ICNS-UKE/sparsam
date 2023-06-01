@@ -146,8 +146,8 @@ def run(
             machine_config = yaml.safe_load(f)
         dict_merge(config, machine_config)
     config['device'] = config.get('device', device)
-    config['data_loader_parameter']['num_workers'] = config['data_loader_parameter'].get('num_workers', num_workers)
-    config['data_loader_parameter']['batch_size'] = config['data_loader_parameter'].get('batch_size', batch_size)
+    config['data_loader_parameter']['num_workers'] = num_workers or config['data_loader_parameter'].get('num_workers', 0)
+    config['data_loader_parameter']['batch_size'] = batch_size or config['data_loader_parameter'].get('batch_size', 256)
 
     # dataset initialization
     image_root_path = Path(image_root_path)
