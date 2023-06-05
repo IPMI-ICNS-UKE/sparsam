@@ -11,6 +11,7 @@ import json
 import numpy as np
 import timm
 import torch
+import torch.nn.functional as F
 from torch import nn, Tensor
 from torch.cuda.amp import autocast
 from torch.optim import Optimizer
@@ -313,6 +314,8 @@ class MultiCropModelWrapper(nn.Module):
         output = []
         for end_idx in idx_crops:
             temp_out = self.backbone.forward_features(torch.cat(x[start_idx:end_idx], dim=0))
+            if temp_out.ndim == 4:
+                temp_out = F.adaptive_avg_pool2d(temp_out, output_size=1).squeeze(dim=-1).squeeze(dim=-1)
             output.append(temp_out)
             start_idx = end_idx
         output = torch.cat(output)
