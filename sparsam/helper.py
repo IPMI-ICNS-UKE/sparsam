@@ -1,7 +1,7 @@
 import math
 import warnings
 from collections import defaultdict
-from random import random, shuffle
+from random import random, shuffle, Random
 from typing import Mapping, Sequence, List, Tuple
 
 import numpy as np
@@ -100,7 +100,7 @@ def uniform_train_test_splitting(feature, labels, n_samples_class=100, seed=None
 def uniform_subsampling(feature, labels, n_samples=100, seed=None):
     index = list(range(len(feature)))
     if seed:
-        random.Random(seed).shuffle(index)
+        Random(seed).shuffle(index)
     else:
         shuffle(index)
     new_feature = []
