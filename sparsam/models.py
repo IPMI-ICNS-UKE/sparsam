@@ -1,4 +1,4 @@
-from timm.models.xcit import XCiT, ClassAttentionBlock
+from timm.models.xcit import Xcit, ClassAttentionBlock
 from timm.models.cait import ClassAttn
 from timm.data import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from timm.layers import DropPath, trunc_normal_, to_2tuple
@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-class AttentionXCiT(XCiT):
+class AttentionXCiT(Xcit):
     def __init__(
             self,
             img_size=224,
