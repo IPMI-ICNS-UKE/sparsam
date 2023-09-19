@@ -313,13 +313,20 @@ class MultiCropModelWrapper(nn.Module):
         start_idx, output = 0, torch.empty(0).to(x[0].device)
         output = []
         for end_idx in idx_crops:
-            temp_out = self.backbone(torch.cat(x[start_idx:end_idx], dim=0))
+            temp_out = self.forward_features(torch.cat(x[start_idx:end_idx], dim=0))
             output.append(temp_out)
             start_idx = end_idx
         output = torch.cat(output)
         if self.projection_head:
             output = self.projection_head(output)
         return output
+
+    def forward_features(self, x: Tensor) -> torch.Tensor:
+        x = self.backbone.forward_features(x)
+        if x.ndim == 4:
+            x = F.adaptive_avg_pool2d(x, output_size=1).squeeze(dim=-1).squeeze(dim=-1)
+        return x
+
 
 
 class MultiCropDatasetWrapper(Dataset):
