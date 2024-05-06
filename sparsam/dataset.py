@@ -61,7 +61,7 @@ class ImageSet(BaseSet):
             self,
             img_paths: Sequence[Path],
             labels: Sequence = None,
-            img_size: int | Sequence[int] = (256, 256),
+            img_size: int | Sequence[int] = None,
             data_augmentation: Callable = None,
             class_names: Sequence[str] = None,
             normalize: Callable | bool = True,
@@ -72,9 +72,11 @@ class ImageSet(BaseSet):
         self.labels = labels
         if class_names:
             self.class_names = class_names
-        else:
+        elif labels:
             self.class_names = sorted(list(set(labels)))
-        if not isinstance(img_size, tuple):
+        else:
+            self.class_names = None
+        if img_size and not isinstance(img_size, tuple):
             img_size = (img_size, img_size)
         self.img_size = img_size
 
@@ -88,7 +90,8 @@ class ImageSet(BaseSet):
             img = Image.fromarray(ds.pixel_array, 'RGB')
         else:
             img = Image.open(path).convert('RGB')
-        img = img.resize(self.img_size, Image.NEAREST)
+        if self.img_size:
+            img = img.resize(self.img_size, Image.NEAREST)
         if self.labels is not None:
             label = self.labels[index]
             if self.class_names is not None:
