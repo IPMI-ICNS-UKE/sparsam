@@ -7,7 +7,7 @@ from PIL import ImageOps
 from PIL.Image import Image as ImageType
 from torch import Tensor
 from torchvision.transforms import transforms
-from abc import ABC
+from abc import ABC, abstractmethod
 
 from torchvision.transforms.functional import to_pil_image
 
@@ -17,6 +17,11 @@ class BaseMultiCropper(ABC):
         self.n_crops = n_global_crops + n_local_crops
         self.n_global_crops = n_global_crops
         self.n_local_crops = n_local_crops
+
+
+    @abstractmethod
+    def __call__(self, image: ImageType | Tensor | np.ndarray, *args, **kwargs) -> ImageType:
+        pass
 
 
 

@@ -377,6 +377,7 @@ def create_dino_gym(
         val_loader: DataLoader = None,
         backbone_model: nn.Module = None,  # default: XCiT_small_12_p8
         classifier: ClassifierMixin = None,
+        data_augmentation=None,
         n_trainings_epochs: int = 250,
         save_path: Path = None,
         device: int | str = 'cuda',
@@ -477,7 +478,7 @@ def create_dino_gym(
     if optimizer_state_dict and isinstance(resume_training_from_checkpoint, os.PathLike):
         Warning('optimizer_state_dict will be overwritten by loaded state_dict')
 
-    data_augmentation = DinoAugmentationCropper(
+    data_augmentation = data_augmentation or DinoAugmentationCropper(
         n_global_crops=n_global_crops,
         n_local_crops=n_local_crops,
         global_crops_scale=global_crops_scale,
@@ -507,7 +508,6 @@ def create_dino_gym(
         step = resume_training_from_checkpoint + 1
     else:
         step = 0
-
 
     backbone = backbone_model or timm.models.xcit_small_12_p8_224_dist(in_chans=3, num_classes=0, pretrained=True)
     projection_head = ProjectionHead(
