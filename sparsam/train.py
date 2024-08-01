@@ -406,6 +406,7 @@ def create_dino_gym(
         projection_head_hidden_dim: int = 2048,
         projection_head_bottleneck_dim: int = 256,
         projection_head_n_layers: int = 4,
+        projection_head_norm_last_layer: bool = True,
         warmup_teacher_temp: float = 0.02,
         teacher_temp: float = 0.04,
         warmup_teacher_temp_iterations: int = None,  # default: 2 epochs
@@ -516,6 +517,7 @@ def create_dino_gym(
         hidden_dim=projection_head_hidden_dim,
         bottleneck_dim=projection_head_bottleneck_dim,
         n_layers=projection_head_n_layers,
+        norm_last_layer=projection_head_norm_last_layer
     )
     student_model = MultiCropModelWrapper(backbone=backbone, projection_head=projection_head)
     # workaround because weight norm in proj head is not deepcopyable
@@ -525,6 +527,7 @@ def create_dino_gym(
         hidden_dim=projection_head_hidden_dim,
         bottleneck_dim=projection_head_bottleneck_dim,
         n_layers=projection_head_n_layers,
+        norm_last_layer=projection_head_norm_last_layer
     )
     teacher_model = MultiCropModelWrapper(backbone=deepcopy(backbone), projection_head=projection_head)
     teacher_update_function = EmaTeacherUpdate(teacher_momentum)
