@@ -16,7 +16,7 @@ import timm
 import torch
 import torch.nn.functional as F
 from torch import nn, Tensor
-from torch.cuda.amp import autocast
+from torch.amp import autocast
 from torch.optim import Optimizer
 from torch.utils.data.dataset import Dataset
 
@@ -29,7 +29,7 @@ class ModelMode(Enum):
 
 
 @torch.no_grad()
-@autocast()
+@autocast('cuda')
 def model_inference(
     data_loader: Iterable, model: nn.Module, mode: ModelMode, device: str | int = 'cuda'
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -259,10 +259,10 @@ class ProjectionHead(nn.Module):
             layers.append(nn.Linear(hidden_dim, bottleneck_dim))
             self.mlp = nn.Sequential(*layers)
         self.apply(self._init_weights)
-        self.last_layer = nn.utils.weight_norm(nn.Linear(bottleneck_dim, out_dim, bias=False))
-        self.last_layer.weight_g.data.fill_(1)
+        self.last_layer = nn.utils.parametrizations.weight_norm(nn.Linear(bottleneck_dim, out_dim, bias=False))
+        self.last_layer.parametrizations.weight.original0.data.fill_(1)
         if norm_last_layer:
-            self.last_layer.weight_g.requires_grad = False
+            self.last_layer.parametrizations.weight.original0.requires_grad = False
 
     @staticmethod
     def _init_weights(m):

@@ -19,7 +19,7 @@ from sklearn.base import ClassifierMixin
 from sklearn.metrics import balanced_accuracy_score
 from sklearn.neighbors import KNeighborsClassifier
 from torch import Tensor, TensorType
-from torch.cuda.amp import GradScaler, autocast
+from torch.amp import GradScaler, autocast
 from torch.nn import CrossEntropyLoss
 from torch.optim.adamw import AdamW
 from torch.optim.optimizer import Optimizer
@@ -304,7 +304,7 @@ class StudentTeacherGym(BaseGym):
 
     def _model_update(self, images: Tensor | List) -> float:
         teacher_out, student_out = self._teacher_student_forward(images)
-        with autocast():
+        with autocast('cuda'):
             loss = self.loss(student_out, teacher_out)
         self._model_backprop(loss)
         self.teacher_update(
@@ -313,7 +313,7 @@ class StudentTeacherGym(BaseGym):
         )
         return loss.item()
 
-    @autocast()
+    @autocast('cuda')
     def _teacher_student_forward(self, images: Tensor) -> Tuple[Tensor, Tensor]:
         self.teacher_model.train()
         self.student_model.train()
@@ -346,7 +346,7 @@ class StudentTeacherGym(BaseGym):
         return results
 
     @torch.no_grad()
-    @autocast()
+    @autocast('cuda')
     def _extract_features(self, data_loader: Iterable, model: nn.Module):
         return model_inference(
             data_loader=data_loader, model=model, mode=ModelMode.EXTRACT_FEATURES, device=self.device
@@ -729,7 +729,7 @@ class SuperGym(BaseGym):
             labels = [label.to(self.device) for label in labels]
             labels = torch.concat(labels, dim=0)
         self.model.train()
-        with autocast():
+        with autocast('cuda'):
             outputs = self.model(images)
             loss_val = self.loss(outputs, labels)
         self._model_backprop(loss_val)
@@ -742,7 +742,7 @@ class SuperGym(BaseGym):
         for val_batch in self.val_loader:
             images, labels = val_batch
             images = images.to(self.device)
-            with autocast() and torch.no_grad():
+            with autocast('cuda') and torch.no_grad():
                 outputs = self.model(images)
                 predictions.append(outputs.cpu().numpy())
                 label_list.append(labels.cpu().numpy())
