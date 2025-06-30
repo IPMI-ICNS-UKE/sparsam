@@ -30,6 +30,8 @@ test_loader = DataLoader(BaseSet())
 
 # Second step: choosing the Backbone, here we choose the timm implementation of ViT, but any model works
 backbone = timm.models.VisionTransformer()
+# The model used in the publication:
+#backbone = timm.models.xcit_small_12_p8_224()
 
 # Option One: creating the DINO training Setup with default parameters:
 # TODO: provide machine specific dataloader parameter
