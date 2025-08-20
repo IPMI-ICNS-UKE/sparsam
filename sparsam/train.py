@@ -532,6 +532,8 @@ def create_dino_gym(
         norm_last_layer=projection_head_norm_last_layer
     )
     teacher_model = MultiCropModelWrapper(backbone=deepcopy(backbone), projection_head=projection_head)
+    teacher_momentum = CosineScheduler(teacher_momentum, 1.0,
+                                       total_iterations=n_trainings_epochs * len(unlabeled_train_loader))
     teacher_update_function = EmaTeacherUpdate(teacher_momentum)
     lr = (unlabeled_train_loader.batch_size / 256) * 0.0005
     optimizer_parameters = optimizer_parameters or dict(lr=lr, weight_decay=0.04)
