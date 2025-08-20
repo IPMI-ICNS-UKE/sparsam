@@ -417,19 +417,19 @@ def fit_classifier(
             train_features, train_labels, _, _ = uniform_train_test_splitting(
                 totaL_train_features, total_train_labels, n_samples_class=eval_class_size, seed=iteration
             )
-        train_features = np.array(train_features)
-        train_labels = np.array(train_labels)
-        for classifier in CLASSIFIERS:
-            if isinstance(classifier, KNeighborsClassifier):
-                classifier.n_neighbors = 5 * len(class_names)
-            pca = PCA()
-            standardizer = PowerTransformer()
-            classifier_pipeline = Pipeline([('standardizer', standardizer), ('pca', pca), ('classifier', classifier)])
-            classifier_pipeline.fit(train_features, train_labels)
-            test_probas = classifier_pipeline.predict_proba(test_features)
-            test_preds = np.argmax(test_probas, axis=-1)
-            report = classification_report(test_labels, test_preds, target_names=class_names, output_dict=True)
-            results[eval_class_size][classifier.__class__.__name__][iteration]['report'] = report
+            train_features = np.array(train_features)
+            train_labels = np.array(train_labels)
+            for classifier in CLASSIFIERS:
+                if isinstance(classifier, KNeighborsClassifier):
+                    classifier.n_neighbors = 5 * len(class_names)
+                pca = PCA()
+                standardizer = PowerTransformer()
+                classifier_pipeline = Pipeline([('standardizer', standardizer), ('pca', pca), ('classifier', classifier)])
+                classifier_pipeline.fit(train_features, train_labels)
+                test_probas = classifier_pipeline.predict_proba(test_features)
+                test_preds = np.argmax(test_probas, axis=-1)
+                report = classification_report(test_labels, test_preds, target_names=class_names, output_dict=True)
+                results[eval_class_size][classifier.__class__.__name__][iteration]['report'] = report
     return results
 
 

@@ -94,7 +94,7 @@ def uniform_train_test_splitting(feature, labels, n_samples_class=100, seed=None
         else:
             rest_label.append(label)
             rest_feature.append(feature[i])
-    return split_feature, split_label, rest_feature, rest_label
+    return np.asarray(split_feature), np.asarray(split_label), np.asarray(rest_feature), np.asarray(rest_label)
 
 
 def uniform_subsampling(feature, labels, n_samples=100, seed=None):

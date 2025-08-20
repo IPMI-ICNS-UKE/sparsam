@@ -124,6 +124,13 @@ class LRScheduler(OptimizerScheduler):
         return lr
 
 
+class WdScheduler(OptimizerScheduler):
+    def step(self, step: int = None, *args, **kwargs) -> float:
+        for i, param_group in enumerate(self.optimizer.param_groups):
+            wd = self.scheduler(step)
+            param_group["weight_decay"] = wd
+        return wd
+
 class DinoWdScheduler(OptimizerScheduler):
     def step(self, step: int = None, *args, **kwargs) -> float:
         for i, param_group in enumerate(self.optimizer.param_groups):
