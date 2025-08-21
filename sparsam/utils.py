@@ -30,14 +30,19 @@ class ModelMode(Enum):
 @torch.no_grad()
 @autocast()
 def model_inference(
-    data_loader: Iterable, model: nn.Module, mode: ModelMode, device: str | int = 'cuda'
+    data_loader: Iterable,
+        model: nn.Module,
+        mode: ModelMode,
 ) -> Tuple[np.ndarray, np.ndarray]:
+    parameter = next(model.parameters())
+    device = parameter.device
+    dtype = parameter.dtype
     model.eval()
     features = []
     labels = []
     for batch in data_loader:
         images, label = batch
-        images = images.to(device)
+        images = images.to(device, dtype=dtype)
         if mode == ModelMode.EXTRACT_FEATURES:
             feature = model.forward_features(images)
         if mode == ModelMode.CLASSIFICATION:
