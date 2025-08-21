@@ -31,8 +31,8 @@ class ModelMode(Enum):
 @autocast()
 def model_inference(
     data_loader: Iterable,
-        model: nn.Module,
-        mode: ModelMode,
+    model: nn.Module,
+    mode: ModelMode,
 ) -> Tuple[np.ndarray, np.ndarray]:
     parameter = next(model.parameters())
     device = parameter.device
