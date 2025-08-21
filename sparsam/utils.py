@@ -28,7 +28,6 @@ class ModelMode(Enum):
 
 
 @torch.no_grad()
-@autocast()
 def model_inference(
     data_loader: Iterable,
     model: nn.Module,
