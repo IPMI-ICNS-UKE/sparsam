@@ -48,8 +48,8 @@ def model_inference(
             feature = torch.softmax(model(images), dim=-1)
         if feature.ndim == 3:
             feature = feature[:, 0]
-        features.extend(list(feature.detach().cpu().numpy()))
-        labels.extend(list(label.detach().numpy()))
+        features.extend(list(feature.detach().float().cpu().numpy()))
+        labels.extend(list(label.detach().float().cpu().numpy()))
     return np.array(features), np.array(labels)
 
 
