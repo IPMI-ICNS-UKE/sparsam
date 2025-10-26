@@ -349,7 +349,7 @@ class StudentTeacherGym(BaseGym):
     @autocast()
     def _extract_features(self, data_loader: Iterable, model: nn.Module):
         return model_inference(
-            data_loader=data_loader, model=model, mode=ModelMode.EXTRACT_FEATURES, device=self.device
+            data_loader=data_loader, model=model, mode=ModelMode.EXTRACT_FEATURES
         )
 
     def _predict_val_samples(self, model: nn.Module) -> Tuple[np.array, np.array]:
