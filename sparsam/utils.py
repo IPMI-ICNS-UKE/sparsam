@@ -191,17 +191,13 @@ class DummyLogger(BaseLogger):
 
 class JsonLogger(BaseLogger):
     def __init__(self, save_path: PathLike):
-        self.save_path = Path(save_path) / f'log_{datetime.now().strftime("%Y-%m-%d-%H-%M-%s")}.json'
-        self.logger = recursive_dict()
+        self.save_path = Path(save_path) / f'log_{datetime.now().strftime("%Y-%m-%d-%H-%M-%s")}.jsonl'
+        self.save_path.parent.mkdir(parents=True, exist_ok=True)
 
     def log(self, logs: dict, step: int | str):
-        if not step in list(self.logger.keys()):
-            self.logger[step] = logs
-        else:
-            self.logger[step].update(logs)
-
-        with open(self.save_path, 'w') as h:
-            json.dump(self.logger, h)
+        with open(self.save_path, 'a') as h:
+            json.dump(dict(step=step, logs=logs), h)
+            h.write('\n')
 
 
 class EarlyStopper:
