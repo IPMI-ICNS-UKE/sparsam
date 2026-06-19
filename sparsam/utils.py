@@ -7,6 +7,7 @@ from enum import Enum
 from functools import partial
 from os import PathLike
 from pathlib import Path
+from tqdm import tqdm
 from typing import Callable, List, Iterable, Tuple, Any
 import json
 
@@ -39,7 +40,7 @@ def model_inference(
     model.eval()
     features = []
     labels = []
-    for batch in data_loader:
+    for batch in tqdm(data_loader):
         images, label = batch
         images = images.to(device, dtype=dtype)
         if mode == ModelMode.EXTRACT_FEATURES:
