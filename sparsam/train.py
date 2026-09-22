@@ -532,8 +532,16 @@ def create_dino_gym(
         norm_last_layer=projection_head_norm_last_layer
     )
     teacher_model = MultiCropModelWrapper(backbone=deepcopy(backbone), projection_head=projection_head)
-    teacher_momentum = CosineScheduler(teacher_momentum, 1.0,
-                                       total_iterations=n_trainings_epochs * len(unlabeled_train_loader))
+    # DINO's teacher momentum INCREASES from ``teacher_momentum`` to 1.0 over training
+    # (facebookresearch/dino main_dino.py: ``cosine_scheduler(args.momentum_teacher, 1, ...)``).
+    # ``CosineScheduler`` takes ``final_value`` before ``base_value``, so the former positional call
+    # ``CosineScheduler(teacher_momentum, 1.0, ...)`` ran the schedule backwards: the teacher
+    # started frozen at momentum 1.0 and only reached ``teacher_momentum`` at the last step.
+    teacher_momentum = CosineScheduler(
+        final_value=1.0,
+        base_value=teacher_momentum,
+        total_iterations=n_trainings_epochs * len(unlabeled_train_loader),
+    )
     teacher_update_function = EmaTeacherUpdate(teacher_momentum)
     lr = (unlabeled_train_loader.batch_size / 256) * 0.0005
     optimizer_parameters = optimizer_parameters or dict(lr=lr, weight_decay=0.04)
